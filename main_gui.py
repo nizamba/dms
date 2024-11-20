@@ -16,21 +16,7 @@ from botocore.exceptions import ClientError
 
 # global variables
 env = os.getenv('ENV', 'development')
-target_schema_name = None
-aws_access_key = None
-aws_secret_key = None
-region = None
-replication_instance_arn = None
 
-all_databases = {}
-selected_db_details = {}
-all_pg_schemas = {}
-selected_schemas = {}
-
-checkboxes = []
-source_host_input = source_user_input = source_password_input = None
-target_host_input = target_user_input = target_password_input = None
-select_all_btn = deselect_all_btn = migrate_button = search_entry = None
 
 
 #logging configuration
