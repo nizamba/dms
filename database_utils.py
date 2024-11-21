@@ -2,7 +2,7 @@ import pyodbc
 import psycopg2
 import logging
 
-# Configure logging
+#Configure logging
 logging.basicConfig(
     level=logging.INFO,  # Change to DEBUG for more detailed logs
     format='%(asctime)s - %(levelname)s - %(message)s',
