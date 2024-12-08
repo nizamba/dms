@@ -1,5 +1,7 @@
 import tkinter as tk
 import os
+import sys
+import json
 import logging
 import pyodbc
 import psycopg2
@@ -18,6 +20,9 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 # global variables
 env = os.getenv('ENV', 'development')
+# Initialize an empty report list
+report = []
+version_status = True
 
 # MSSQL Connection Details
 mssql_connection = {
@@ -39,39 +44,84 @@ rds_postgres_connection = {
 
 # Dictionary to hold migration details for each database
 databases_to_migrate = {
-    "DemoDB": {
-        "source_db_name": "DemoDB",
+    "ccdsa_RCM": {
+        # "source_db": "dbo.case_managment_versions",
+        "source_db": "cddsa_RCM",
         "target_schema": "nizlog14_rcm",
         "dms_instance_arn": "None",
         "SourceEndpointArn": None,
-        "TargetEndpointArn": None
+        "TargetEndpointArn": None,
+        "product": "rcm"
     },
-    "DB2": {
-        "source_db_name": "source_db_name_2",
-        "target_schema": "target_schema_2",
-        "dms_instance_arn": "your-dms-instance-arn-2",
+    "cddsa_CDD_APP": {
+        "source_db": "cddsa_CDD_APP",
+        "target_schema": "nizlog14_rcm",
+        "dms_instance_arn": "None",
         "SourceEndpointArn": None,
-        "TargetEndpointArn": None
+        "TargetEndpointArn": None,
+        "product": "cdd_app"
+    },
+    "cddsa_CDD_PRF": {
+        "source_db": "cddsa_CDD_PRF",
+        "target_schema": "nizlog14_rcm",
+        "dms_instance_arn": "None",
+        "SourceEndpointArn": None,
+        "TargetEndpointArn": None,
+        "product": "cdd_prf"
+    },
+    "cddsa_UDM": {
+        "source_db": "cddsa_UDM",
+        "target_schema": "nizlog14_udm_cds",
+        "dms_instance_arn": "None",
+        "SourceEndpointArn": None,
+        "TargetEndpointArn": None,
+        "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
+    },
+    "md": {
+        "source_db": "cddsa_RCM",
+        "target_schema": "nizlog14_rcm",
+        "dms_instance_arn": "None",
+        "SourceEndpointArn": None,
+        "TargetEndpointArn": None,
+        "product": "md"
+    },
+    "bbun04_SAM_PRF": {
+        "source_db": "bbun04_SAM_PRF",
+        "target_schema": "nizlog14_rcm",
+        "dms_instance_arn": "None",
+        "SourceEndpointArn": None,
+        "TargetEndpointArn": None,
+        "product": "sam_prf"
+    },
+    "bbun04_SAM_APP": {
+        "source_db": "bbun04_SAM_APP",
+        "target_schema": "nizlog14_rcm",
+        "dms_instance_arn": "None",
+        "SourceEndpointArn": None,
+        "TargetEndpointArn": None,
+        "product": "sam_app"
     }
     # Add more databases as needed
 }
 
 # DMS Configuration
 dms_create = True # Set to True to create DMS resources; False to use existing
-tablemappings = '''{
-    "rules": [
-        {
-            "rule-type": "selection",
-            "rule-id": "1",
-            "rule-name": "include_all",
-            "object-locator": {
-                "schema-name": "%",
-                "table-name": "%"
-            },
-            "rule-action": "include"
-        }
-    ]
-}'''
+# tablemappings = '''{
+#     "rules": [
+#         {
+#             "rule-type": "selection",
+#             "rule-id": "1",
+#             "rule-name": "include_all",
+#             "object-locator": {
+#                 "schema-name": "%",
+#                 "table-name": "%"
+#             },
+#             "rule-action": "include"
+#         }
+#     ]
+# }'''
+tablemappings = {}
+
 
 tasksettings = '''{
     "TargetMetadata": {
@@ -139,10 +189,12 @@ def execute_script_on_database(script_input, db_name, is_postgres=False, schema_
         # Handle file or direct SQL input
         if os.path.isfile(script_input):
             with open(script_input, 'r') as script_file:
+                # script = script_file.read()
                 script = script_file.read()
         else:
             script = script_input
-        activity_logger.info(f"Executing {'PostgreSQL' if is_postgres else 'MSSQL'} script {script_input} for {schema_name or db_name}.")
+        activity_logger.info(
+            f"Executing {'PostgreSQL' if is_postgres else 'MSSQL'} script {script_input} for {schema_name or db_name}.")
 
         # Establish database connection
         if is_postgres:
@@ -191,8 +243,10 @@ def execute_script_on_database(script_input, db_name, is_postgres=False, schema_
             return None
 
     except Exception as e:
-        activity_logger.error(f"Error executing script for {'schema ' + schema_name if is_postgres else 'database ' + db_name}: {str(e)}")
+        activity_logger.error(
+            f"Error executing script for {'schema ' + schema_name if is_postgres else 'database ' + db_name}: {str(e)}")
         raise
+
 
 def run_analyze_script(db_name, is_postgres=False, schema_name=None):
     analyze_template_path = os.path.join(os.path.dirname(__file__), 'mssql_analyze.sql')
@@ -204,10 +258,8 @@ def run_analyze_script(db_name, is_postgres=False, schema_name=None):
         else:
             activity_logger.info(f"Analyze script executed successfully on {db_name}. No results were returned.")
     except Exception as e:
-        activity_logger.error(f"Failed to run analyze on {db}: {str(e)}")
+        activity_logger.error(f"Failed to run analyze on {db_name}: {str(e)}")
         raise
-
-
 def create_partition_alignment(db_name, is_postgres=True, schema_name=None):
     script_path = os.path.join(os.path.dirname(__file__), 'Partition_Alignment_General.sql')
     activity_logger.info(f"Creating partition alignment for {db_name}...")
@@ -279,7 +331,6 @@ def create_partition_alignment(db_name, is_postgres=True, schema_name=None):
                 activity_logger.warning(f"Failed to delete temporary script file: {temp_script_path}. Error: {str(e)}", exc_info=True)
 
     return None
-
 def disable_triggers_in_pg(db_name):
     try:
         schema_name = db_name.lower()
@@ -322,7 +373,6 @@ def disable_triggers_in_pg(db_name):
         activity_logger.info(f"Triggers disabled for schema {schema_name}")
     except Exception as e:
         activity_logger.error(f"Error in disabling triggers for schema {schema_name}: {str(e)}")
-
 def drop_fks_in_pg(db_name):
     try:
         schema_name = db_name.lower()  # Convert the schema name to lowercase to avoid case mismatches
@@ -365,11 +415,10 @@ def drop_fks_in_pg(db_name):
 
     except Exception as e:
         activity_logger.info(f"Error in processing drop foreign keys for schema {schema_name}: {str(e)}")
-
 def create_dms_replication_instance(instance_identifier, instance_class, allocated_storage, subnet_group_name, security_group_ids, region, publicly_accessible=True):
     # Create a session with the specified profile
     session = boto3.Session(profile_name=dms_details["aws_profile"])
-
+    print(region)
     # Create a DMS client for the specified region
     dms_client = session.client('dms', region_name=region)
 
@@ -401,7 +450,6 @@ def create_dms_replication_instance(instance_identifier, instance_class, allocat
         return None
     except Exception as e:
         activity_logger.error(f"Unexpected error: {str(e)}")
-
 def configure_dms_endpoints(endpointtype,enginename,servername,port,databasename,username,password,region):
     """Configure source (SQL Server) and target (PostgreSQL) DMS endpoints"""
     try:
@@ -433,7 +481,6 @@ def configure_dms_endpoints(endpointtype,enginename,servername,port,databasename
 
     except Exception as e:
         activity_logger.error(f"Unexpected error: {str(e)}")
-
 def create_dms_task(sourceendpointarn,targetendpointarn,migrationtype,tablemappings,replicationinstancearn,tasksettings,tags,databasename,region):
     try:
         activity_logger.info(f"Processing migration task for databases: {databasename}")
@@ -461,8 +508,6 @@ def create_dms_task(sourceendpointarn,targetendpointarn,migrationtype,tablemappi
 
     except Exception as e:
         activity_logger.error(f"Unexpected error: {str(e)}")
-
-
 def wait_for_replication_instance(dms_client, instance_id):
     """Wait for replication instance to be available"""
     while True:
@@ -491,31 +536,195 @@ def wait_for_replication_instance(dms_client, instance_id):
         else:
             activity_logger.error("Replication instance not found.\n")
             return False
+def get_product_version(script_input, db_name, is_postgres=False, schema_name=None):
+    try:
+        # Handle file or direct SQL input
+        if os.path.isfile(script_input):
+            with open(script_input, 'r') as script_file:
+                # script = script_file.read()
+                script = script_file.read().replace("{{schema_name}}", schema_name)
+                print(script)
+        else:
+            script = script_input
+        activity_logger.info(
+            f"Executing {'PostgreSQL' if is_postgres else 'MSSQL'} script {script_input} for {schema_name or db_name}.")
 
+        # Establish database connection
+        if is_postgres:
+            conn = psycopg2.connect(
+                host=rds_postgres_connection["host"],
+                database=rds_postgres_connection["database"],  # Using the default postgres database
+                user=rds_postgres_connection["user"],
+                password=rds_postgres_connection["password"]
+            )
+        else:
+            conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};" \
+                       f"SERVER={mssql_connection['host']};" \
+                       f"DATABASE={db_name};" \
+                       f"UID={mssql_connection['user']};" \
+                       f"PWD={mssql_connection['password']}"
+            conn = pyodbc.connect(conn_str)
 
+        cursor = conn.cursor()
+        print(script)
+        # Execute the script
+        cursor.execute(script)
+
+        # Fetch results if available
+        try:
+            results = cursor.fetchall()
+            activity_logger.info(f"Results: {results}")
+            print(results[0])
+        except (pyodbc.ProgrammingError, psycopg2.ProgrammingError):
+            conn.commit()
+            results = None
+            activity_logger.info("No results returned; transaction committed.")
+
+        # Close the connection
+        cursor.close()
+        conn.close()
+
+        # Save results to a file if any
+        if results:
+        #     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        #     result_file = f"{schema_name if is_postgres else db_name}_script_results_{timestamp}.txt"
+        #     with open(result_file, 'w') as f:
+        #         for row in results:
+        #             f.write(str(row) + '\n')
+        #     activity_logger.info(f"Results saved to: {result_file}")
+        #     return result_file
+            return results
+        else:
+            return None
+
+    except Exception as e:
+        activity_logger.error(
+            f"Error executing script for {'schema ' + schema_name if is_postgres else 'database ' + db_name}: {str(e)}")
+        raise
+def get_database_details():
+    while True:
+        source_db = input("Enter the source database name (or type 'done' to finish): ")
+        if source_db.lower() == 'done':
+            return  databases_to_migrate
+
+        target_schema = input(f"Enter the target schema for {source_db}: ")
+        dms_instance_arn = input(f"Enter the DMS instance ARN for {source_db} (or 'None' if not applicable): ")
+
+        databases_to_migrate[source_db] = {
+            "source_db": source_db,
+            "target_schema": target_schema,
+            "dms_instance_arn": dms_instance_arn if dms_instance_arn.lower() != 'none' else None,
+            "SourceEndpointArn": None,
+            "TargetEndpointArn": None
+        }
 if __name__ == "__main__":
-    # run_analyze_script(databases_to_migrate["DemoDB"]["source_db_name"])
-    # create_partition_alignment(databases_to_migrate["DemoDB"]["source_db_name"],False,databases_to_migrate["DemoDB"]["target_schema"])
-    # disable_triggers_in_pg(databases_to_migrate["DemoDB"]["target_schema"])
-    # drop_fks_in_pg(databases_to_migrate["DemoDB"]["target_schema"])
-    # create_dms_replication_instance(dms_details["instance_identifier"],dms_details["instance_class"],dms_details["allocated_storage"],dms_details["subnet_group_name"],dms_details["VpcSecurityGroupIds"],dms_details["region"],dms_details["public_access"])
-    # print(databases_to_migrate["DemoDB"]["dms_instance_arn"])
-    # configure_dms_endpoints('source','sqlserver',mssql_connection["host"],1433,databases_to_migrate["DemoDB"]["source_db_name"],mssql_connection["user"],mssql_connection["password"],dms_details["region"])
-    # configure_dms_endpoints('target','postgres',rds_postgres_connection["host"], 5432,databases_to_migrate["DemoDB"]["target_schema"], rds_postgres_connection["user"],rds_postgres_connection["password"], dms_details["region"])
-    # print(databases_to_migrate["DemoDB"]["TargetEndpointArn"])
-    # print(databases_to_migrate["DemoDB"]["SourceEndpointArn"])
-    # create_dms_task(databases_to_migrate["DemoDB"]["SourceEndpointArn"],databases_to_migrate["DemoDB"]["TargetEndpointArn"],'full-load',tablemappings,databases_to_migrate["DemoDB"]["dms_instance_arn"],tasksettings,tags,databases_to_migrate["DemoDB"]["source_db_name"],dms_details["region"])
+    # with open('tablemappings.json', 'r') as file:
+    #     tablemappings = json.load(file)
+    # # Convert the dictionary to a JSON string
+    # tablemappings_json = json.dumps(tablemappings)
+    # # Access or print the data
+    # print(tablemappings)
     for db_name, details in databases_to_migrate.items():
-        print(f"Processing {db_name}...")
-        source_db_name = details["source_db_name"]
-        target_schema = details["target_schema"]
-        dms_instance_arn = details["dms_instance_arn"]
-        source_endpoint_arn = details["SourceEndpointArn"]
-        target_endpoint_arn = details["TargetEndpointArn"]
+        # run_analyze_script(details["source_db"])
+        # create_partition_alignment(details["source_db"], False,details["target_schema"])
+        # disable_triggers_in_pg(details["target_schema"])
+        # drop_fks_in_pg(details["target_schema"])
+        # print(dms_details["region"])
+        # create_dms_replication_instance(dms_details["instance_identifier"],dms_details["instance_class"],dms_details["allocated_storage"],dms_details["subnet_group_name"],dms_details["VpcSecurityGroupIds"],dms_details["region"],dms_details["public_access"])
+        # print(databases_to_migrate["DemoDB"]["dms_instance_arn"])
+        # configure_dms_endpoints('source', 'sqlserver', mssql_connection["host"], 1433,details["source_db"],mssql_connection["user"],mssql_connection["password"], dms_details["region"])
+        # configure_dms_endpoints('target', 'postgres', rds_postgres_connection["host"], 5432,details["target_schema"], rds_postgres_connection["user"],rds_postgres_connection["password"],dms_details["region"])
+        # print(details["TargetEndpointArn"])
+        # print(details["SourceEndpointArn"])
+        # create_dms_task(details["SourceEndpointArn"],details["TargetEndpointArn"], 'full-load', tablemappings_json,details["dms_instance_arn"], tasksettings, tags,details["source_db"], dms_details["region"])
+        if details["product"] == "udm":
+            sql_schema =  details["source_db"]  + '_CDS'
+            source_schema = details["source_db"] + "." + sql_schema
+            print("source schema is" + source_schema)
+        sql_script = details["product"] + '_version.sql'
+        pg_script = details["product"] + '_pg_version.sql'
+        print(sql_script)
+        print(pg_script)
+        sql_version_script_path = os.path.join(os.path.dirname(__file__), sql_script)
+        pg_version_script_path = os.path.join(os.path.dirname(__file__), pg_script)
+        print(sql_version_script_path)
+        print(pg_version_script_path)
+        if details["product"] == "udm":
+            source_version = get_product_version(sql_version_script_path, "master", is_postgres=False,schema_name=source_schema)
+        else:
+            source_version = get_product_version(sql_version_script_path,"master",is_postgres=False,schema_name=details["source_db"])
 
-        print(f"  Source DB Name: {source_db_name}")
-        print(f"  Target Schema: {target_schema}")
-        print(f"  DMS Instance ARN: {dms_instance_arn}")
-        print(f"  Source Endpoint ARN: {source_endpoint_arn}")
-        print(f"  Target Endpoint ARN: {target_endpoint_arn}")
-        print("-" * 40)
+        target_version = get_product_version(pg_version_script_path, db_name, is_postgres=True,schema_name=details["target_schema"])
+        print(details["product"] + " source version is => " + source_version[0][0])
+        print(details["product"] + " target version is => " + target_version[0][0])
+
+
+
+# version_script_path = os.path.join(os.path.dirname(__file__), 'udm_pg_version.sql')
+    # get_product_version(version_script_path,"actdb",True,databases_to_migrate["DemoDB-udm"]["target_schema"])
+    # version_script_path = os.path.join(os.path.dirname(__file__), 'rcm_pg_version.sql')
+    # get_product_version(version_script_path, "actdb", True, databases_to_migrate["DemoDB"]["target_schema"])
+    # version_script_path = os.path.join(os.path.dirname(__file__), 'rcm_version.sql')
+    # get_product_version(version_script_path,"cdd20_RCM",is_postgres=False,schema_name="cdd20_RCM")
+    # version_script_path = os.path.join(os.path.dirname(__file__), 'cdd_app_version.sql')
+    # get_product_version(version_script_path, "cddsa_CDD_APP", is_postgres=False, schema_name="cddsa_CDD_APP")
+    # version_script_path = os.path.join(os.path.dirname(__file__), 'cdd_prf_version.sql')
+    # get_product_version(version_script_path, "cddsa_CDD_PRF", is_postgres=False, schema_name="cddsa_CDD_PRF")
+    # version_script_path = os.path.join(os.path.dirname(__file__), 'md_version.sql')
+    # get_product_version(version_script_path, "cddsa_RCM", is_postgres=False, schema_name="cddsa_RCM")
+    # version_script_path = os.path.join(os.path.dirname(__file__), 'sam_prf_version.sql')
+    # get_product_version(version_script_path, "nca15_SAM_PRF", is_postgres=False, schema_name="nca15_SAM_PRF")
+    # version_script_path = os.path.join(os.path.dirname(__file__), 'sam_app_version.sql')
+    # get_product_version(version_script_path, "nca15_SAM_APP", is_postgres=False, schema_name="nca15_SAM_APP")
+    # version_script_path = os.path.join(os.path.dirname(__file__), 'udm_version.sql')
+    # get_product_version(version_script_path, "cddsa_UDM", is_postgres=False, schema_name="cddsa_UDM.cddsa_UDM_CDS")
+
+
+    #
+    # for db_name, details in databases_to_migrate.items():
+    #     run_analyze_script(details["source_db"])
+    #     create_partition_alignment(details["source_db"], False,details["target_schema"])
+    #     disable_triggers_in_pg(details["target_schema"])
+    #     drop_fks_in_pg(details["target_schema"])
+    #     create_dms_replication_instance(dms_details["instance_identifier"], dms_details["instance_class"],dms_details["allocated_storage"], dms_details["subnet_group_name"],dms_details["VpcSecurityGroupIds"], dms_details["region"],dms_details["public_access"])
+    # databases_to_migrate = get_database_details()
+    # print(databases_to_migrate)
+    # get_product_version(mssql_connection["host"],"nca73_RCM",mssql_connection["user"],mssql_connection["password"],"dbo.acm_md_versions","RCM",version_column,pruct_name)
+    # Load JSON from a file
+
+    # for db_name, details in databases_to_migrate.items():
+    #     sql_script = details["product"] + '_version.sql'
+    #     pg_script = details["product"] + '_pg_version.sql'
+    #     print(sql_script)
+    #     print(pg_script)
+    #     sql_version_script_path = os.path.join(os.path.dirname(__file__), sql_script)
+    #     pg_version_script_path = os.path.join(os.path.dirname(__file__), pg_script)
+    #     print(sql_version_script_path)
+    #     print(pg_version_script_path)
+    #     source_version = get_product_version(sql_version_script_path,db_name,is_postgres=False,schema_name=details["source_db"])
+    #     # source_version = '10.0.0.56'
+    #     print(source_version)
+    #     target_version = get_product_version(pg_version_script_path,db_name,is_postgres=True,schema_name=details["target_schema"])
+    #     print(target_version[0][0])
+    #     # Compare versions and append to the report
+    #     if source_version[0][0] == target_version[0][0]:
+    #         report.append(f"{db_name}: Versions match (Version: {source_version[0][0]})")
+    #         # print(f"{db_name}: Versions match (Version: {source_version})")
+    #     else:
+    #         report.append(f"{db_name}: Versions do not match (Source: {source_version[0][0]}), Target: {target_version[0][0]})")
+    #         # print(f"{db_name}: Versions do not match (Source: {source_version}, Target: {target_version[0][0]})")
+    #         version_status = False
+
+
+    # Output the report
+    # for line in report:
+    #     print(line)
+    # for line in report:
+    #     if "not match" in line:  # Check if "not match" exists in the line
+    #         print(f"Error found in report: {line}")
+    #         sys.exit("Stopping the application due to mismatched versions.")
+    # print("\n".join(report))
+    # if version_status == False:
+    #     sys.exit("Stopping the application due to mismatched versions.")
+
+
