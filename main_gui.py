@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import logging
+import random
 import pyodbc
 import psycopg2
 import ast
@@ -44,63 +45,73 @@ rds_postgres_connection = {
 
 # Dictionary to hold migration details for each database
 databases_to_migrate = {
-    "ccdsa_RCM": {
+    "DemoDB": {
         # "source_db": "dbo.case_managment_versions",
-        "source_db": "cddsa_RCM",
+        "source_db": "DemoDB",
         "target_schema": "nizlog14_rcm",
         "dms_instance_arn": "None",
         "SourceEndpointArn": None,
         "TargetEndpointArn": None,
         "product": "rcm"
-    },
-    "cddsa_CDD_APP": {
-        "source_db": "cddsa_CDD_APP",
-        "target_schema": "nizlog14_rcm",
-        "dms_instance_arn": "None",
-        "SourceEndpointArn": None,
-        "TargetEndpointArn": None,
-        "product": "cdd_app"
-    },
-    "cddsa_CDD_PRF": {
-        "source_db": "cddsa_CDD_PRF",
-        "target_schema": "nizlog14_rcm",
-        "dms_instance_arn": "None",
-        "SourceEndpointArn": None,
-        "TargetEndpointArn": None,
-        "product": "cdd_prf"
-    },
-    "cddsa_UDM": {
-        "source_db": "cddsa_UDM",
-        "target_schema": "nizlog14_udm_cds",
-        "dms_instance_arn": "None",
-        "SourceEndpointArn": None,
-        "TargetEndpointArn": None,
-        "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
-    },
-    "md": {
-        "source_db": "cddsa_RCM",
-        "target_schema": "nizlog14_rcm",
-        "dms_instance_arn": "None",
-        "SourceEndpointArn": None,
-        "TargetEndpointArn": None,
-        "product": "md"
-    },
-    "bbun04_SAM_PRF": {
-        "source_db": "bbun04_SAM_PRF",
-        "target_schema": "nizlog14_rcm",
-        "dms_instance_arn": "None",
-        "SourceEndpointArn": None,
-        "TargetEndpointArn": None,
-        "product": "sam_prf"
-    },
-    "bbun04_SAM_APP": {
-        "source_db": "bbun04_SAM_APP",
-        "target_schema": "nizlog14_rcm",
-        "dms_instance_arn": "None",
-        "SourceEndpointArn": None,
-        "TargetEndpointArn": None,
-        "product": "sam_app"
     }
+    # "ccdsa_RCM": {
+    #     # "source_db": "dbo.case_managment_versions",
+    #     "source_db": "cddsa_RCM",
+    #     "target_schema": "nizlog14_rcm",
+    #     "dms_instance_arn": "None",
+    #     "SourceEndpointArn": None,
+    #     "TargetEndpointArn": None,
+    #     "product": "rcm"
+    # },
+    # "cddsa_CDD_APP": {
+    #     "source_db": "cddsa_CDD_APP",
+    #     "target_schema": "nizlog14_rcm",
+    #     "dms_instance_arn": "None",
+    #     "SourceEndpointArn": None,
+    #     "TargetEndpointArn": None,
+    #     "product": "cdd_app"
+    # },
+    # "cddsa_CDD_PRF": {
+    #     "source_db": "cddsa_CDD_PRF",
+    #     "target_schema": "nizlog14_rcm",
+    #     "dms_instance_arn": "None",
+    #     "SourceEndpointArn": None,
+    #     "TargetEndpointArn": None,
+    #     "product": "cdd_prf"
+    # },
+    # "cddsa_UDM": {
+    #     "source_db": "cddsa_UDM",
+    #     "target_schema": "nizlog14_udm_cds",
+    #     "dms_instance_arn": "None",
+    #     "SourceEndpointArn": None,
+    #     "TargetEndpointArn": None,
+    #     "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
+    # }
+    # ,
+    # "md": {
+    #     "source_db": "cddsa_RCM",
+    #     "target_schema": "nizlog14_rcm",
+    #     "dms_instance_arn": "None",
+    #     "SourceEndpointArn": None,
+    #     "TargetEndpointArn": None,
+    #     "product": "md"
+    # },
+    # "bbun04_SAM_PRF": {
+    #     "source_db": "bbun04_SAM_PRF",
+    #     "target_schema": "nizlog14_rcm",
+    #     "dms_instance_arn": "None",
+    #     "SourceEndpointArn": None,
+    #     "TargetEndpointArn": None,
+    #     "product": "sam_prf"
+    # },
+    # "bbun04_SAM_APP": {
+    #     "source_db": "bbun04_SAM_APP",
+    #     "target_schema": "nizlog14_rcm",
+    #     "dms_instance_arn": "None",
+    #     "SourceEndpointArn": None,
+    #     "TargetEndpointArn": None,
+    #     "product": "sam_app"
+    # }
     # Add more databases as needed
 }
 
@@ -601,30 +612,294 @@ def get_product_version(script_input, db_name, is_postgres=False, schema_name=No
         activity_logger.error(
             f"Error executing script for {'schema ' + schema_name if is_postgres else 'database ' + db_name}: {str(e)}")
         raise
-def get_database_details():
-    while True:
-        source_db = input("Enter the source database name (or type 'done' to finish): ")
-        if source_db.lower() == 'done':
-            return  databases_to_migrate
+# Function to generate a random 9-digit rule-id
+def generate_rule_id():
+    return str(random.randint(100000000, 999999999))
+# Function to generate the DMS JSON structure for a single partitioned table
+def generate_partition_table_json(schema_name, table_name, input_schema_name):
+    return {
+        "rules": [
+            {
+                "rule-type": "transformation",
+                "rule-id": generate_rule_id(),
+                "rule-name": generate_rule_id(),
+                "rule-target": "table",
+                "object-locator": {
+                    "schema-name": schema_name,
+                    "table-name": table_name
+                },
+                "parallel-load": None,
+                "rule-action": "convert-lowercase",
+                "value": None,
+                "old-value": None
+            },
+            {
+                "rule-type": "transformation",
+                "rule-id": generate_rule_id(),
+                "rule-name": generate_rule_id(),
+                "rule-target": "schema",
+                "object-locator": {
+                    "schema-name": schema_name
+                },
+                "parallel-load": None,
+                "rule-action": "rename",
+                "value": input_schema_name.lower(),
+                "old-value": None
+            },
+            {
+                "rule-type": "selection",
+                "rule-id": generate_rule_id(),
+                "rule-name": generate_rule_id(),
+                "object-locator": {
+                    "schema-name": schema_name,
+                    "table-name": table_name
+                },
+                "rule-action": "include",
+                "filters": []
+            },
+            {
+                "rule-type": "table-settings",
+                "rule-id": generate_rule_id(),
+                "rule-name": generate_rule_id(),
+                "object-locator": {
+                    "schema-name": schema_name,
+                    "table-name": table_name
+                },
+                "parallel-load": {
+                    "type": "partitions-auto"
+                }
+            }
+        ]
+    }
+# Function to generate the DMS JSON structure for non-partition tables, including HugeTables
+def generate_non_partition_table_json(schema_name, table, input_schema_name):
+    return {
+        "rules": [
+            {
+                "rule-type": "transformation",
+                "rule-id": generate_rule_id(),
+                "rule-name": generate_rule_id(),
+                "rule-target": "table",
+                "object-locator": {
+                    "schema-name": schema_name,
+                    "table-name": table.TableName
+                },
+                "parallel-load": None,
+                "rule-action": "convert-lowercase",
+                "value": None,
+                "old-value": None
+            },
+            {
+                "rule-type": "transformation",
+                "rule-id": generate_rule_id(),
+                "rule-name": generate_rule_id(),
+                "rule-target": "schema",
+                "object-locator": {
+                    "schema-name": schema_name
+                },
+                "parallel-load": None,
+                "rule-action": "rename",
+                "value": input_schema_name.lower(),
+                "old-value": None
+            },
+            {
+                "rule-type": "selection",
+                "rule-id": generate_rule_id(),
+                "rule-name": generate_rule_id(),
+                "object-locator": {
+                    "schema-name": schema_name,
+                    "table-name": table.TableName
+                },
+                "rule-action": "include"
+            }
+        ]
+    }
+# Function to generate the DMS JSON structure for remaining tables
+def generate_remaining_tables_json(schema_name, input_schema_name, allocated_tables):
+    remaining_tables_rules = []
 
-        target_schema = input(f"Enter the target schema for {source_db}: ")
-        dms_instance_arn = input(f"Enter the DMS instance ARN for {source_db} (or 'None' if not applicable): ")
-
-        databases_to_migrate[source_db] = {
-            "source_db": source_db,
-            "target_schema": target_schema,
-            "dms_instance_arn": dms_instance_arn if dms_instance_arn.lower() != 'none' else None,
-            "SourceEndpointArn": None,
-            "TargetEndpointArn": None
+    # Add exclude rules for already allocated tables
+    for schema, table_name in allocated_tables:
+        exclude_rule = {
+            "rule-type": "selection",
+            "rule-id": generate_rule_id(),
+            "rule-name": generate_rule_id(),
+            "object-locator": {
+                "schema-name": schema,
+                "table-name": table_name
+            },
+            "rule-action": "exclude",
+            "filters": []
         }
+        remaining_tables_rules.append(exclude_rule)
+
+    # Add a single include rule for all remaining tables in the schema
+    remaining_json = {
+        "rules": [
+            {
+                "rule-type": "transformation",
+                "rule-id": generate_rule_id(),
+                "rule-name": generate_rule_id(),
+                "rule-target": "table",
+                "object-locator": {
+                    "schema-name": schema_name,
+                    "table-name": "%"
+                },
+                "rule-action": "convert-lowercase",
+                "value": None,
+                "old-value": None
+            },
+            {
+                "rule-type": "transformation",
+                "rule-id": generate_rule_id(),
+                "rule-name": generate_rule_id(),
+                "rule-target": "schema",
+                "object-locator": {
+                    "schema-name": schema_name
+                },
+                "rule-action": "rename",
+                "value": input_schema_name.lower(),
+                "old-value": None
+            },
+            {
+                "rule-type": "selection",
+                "rule-id": generate_rule_id(),
+                "rule-name": generate_rule_id(),
+                "object-locator": {
+                    "schema-name": schema_name,
+                    "table-name": "%"
+                },
+                "rule-action": "include",
+                "filters": []
+            }
+        ] + remaining_tables_rules
+    }
+
+    return remaining_json
+def generate_json_files(db_name, script_input, target_schema):
+    # Create folders for each category if they don't exist
+    # folders = {
+    #     "PartitionTables": "non_partition_table_json",
+    #     "HugeTables": "partition_table_json",
+    #     "LobTables": "lob_table_json",
+    #     "RemainingTables": "remaining_tables_json.sql"
+    # }
+    folders = ["non_partition_table_json", "partition_table_json", "lob_table_json", "remaining_tables_json" ]
+    script_input_name = script_input + '.sql'
+
+    for folder in folders:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+    # Handle file or direct SQL input
+    if os.path.isfile(script_input_name):
+        with open(script_input_name, 'r') as script_file:
+            # script = script_file.read()
+            script = script_file.read().replace("{{db_name}}", db_name)
+            print(script)
+    else:
+        script = script_input
+
+    # Establish the database connection using the credentials
+    conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};" \
+               f"SERVER={mssql_connection['host']};" \
+               f"DATABASE={db_name};" \
+               f"UID={mssql_connection['user']};" \
+               f"PWD={mssql_connection['password']}"
+    conn = pyodbc.connect(conn_str)
+    cursor = conn.cursor()
+
+    # Execute the script
+    cursor.execute(script)
+
+    tables = cursor.fetchall()
+
+    # Debugging print
+    print("Number of tables fetched:", len(tables))
+
+    allocated_tables = []
+    remaining_schemas = set()
+
+    for table in tables:
+        if table.TableName == "ActMigListTables":
+            # Skip this table entirely
+            continue
+
+        dms_json = generate_partition_table_json(table.SchemaName, table.TableName, target_schema)
+        folder = script_input
+        filename = f"{folder}/dms_task_{table.SchemaName}_{table.TableName}.json"
+        allocated_tables.append((table.SchemaName, table.TableName))
+
+        # Write the JSON file for PartitionTables
+        print(f"Creating JSON file: {filename}")
+        with open(filename, 'w') as json_file:
+            json.dump(dms_json, json_file, indent=4)
+
+        # elif table.TaskCategory == "DedicatedNonPartitionedTask":
+        #     dms_json = generate_non_partition_table_json(table.SchemaName, table, input_schema_name)
+        #     folder = folders["HugeTables"]
+        #     filename = f"{folder}/dms_task_{table.SchemaName}_{table.TableName}.json"
+        #     allocated_tables.append((table.SchemaName, table.TableName))
+        #
+        #     # Write the JSON file for HugeTables
+        #     print(f"Creating JSON file: {filename}")
+        #     with open(filename, 'w') as json_file:
+        #         json.dump(dms_json, json_file, indent=4)
+        #
+        # elif table.TaskCategory == "CollectiveLobTask":
+        #     dms_json = generate_non_partition_table_json(table.SchemaName, table, input_schema_name)
+        #     folder = folders["LobTables"]
+        #     filename = f"{folder}/dms_task_{table.SchemaName}_{table.TableName}.json"
+        #     allocated_tables.append((table.SchemaName, table.TableName))
+        #
+        #     # Write the JSON file for LobTables
+        #     print(f"Creating JSON file: {filename}")
+        #     with open(filename, 'w') as json_file:
+        #         json.dump(dms_json, json_file, indent=4)
+        #
+        # elif table.TaskCategory == "CollectiveRemainingTask":
+        #     remaining_schemas.add(table.SchemaName)
+
+    # # Generate and save JSON file for RemainingTables
+    # for schema_name in remaining_schemas:
+    #     remaining_json = generate_remaining_tables_json(schema_name, input_schema_name, allocated_tables)
+    #     folder = folders["RemainingTables"]
+    #     filename = f"{folder}/dms_task_{schema_name}_remaining_tables.json"
+    #
+    #     print(f"Creating JSON file: {filename}")
+    #     with open(filename, 'w') as json_file:
+    #         json.dump(remaining_json, json_file, indent=4)
+
+    conn.close()
+
+
 if __name__ == "__main__":
-    # with open('tablemappings.json', 'r') as file:
-    #     tablemappings = json.load(file)
-    # # Convert the dictionary to a JSON string
-    # tablemappings_json = json.dumps(tablemappings)
-    # # Access or print the data
-    # print(tablemappings)
+    with open('tablemappings.json', 'r') as file:
+        tablemappings = json.load(file)
+    # Convert the dictionary to a JSON string
+    tablemappings_json = json.dumps(tablemappings)
+    # Access or print the data
+    print(tablemappings)
     for db_name, details in databases_to_migrate.items():
+        #####generate_partition_table_json
+        json_script_path = os.path.join(os.path.dirname(__file__), 'partition_table_json')
+        print(json_script_path)
+        generate_json_files(db_name,json_script_path,details["target_schema"])
+
+        #####generate_non_partition_table_json
+        json_script_path = os.path.join(os.path.dirname(__file__), 'non_partition_table_json')
+        print(json_script_path)
+        generate_json_files(db_name, json_script_path, details["target_schema"])
+
+        #####generate_lob_table_json
+        json_script_path = os.path.join(os.path.dirname(__file__), 'lob_table_json')
+        print(json_script_path)
+        generate_json_files(db_name, json_script_path, details["target_schema"])
+
+        #####generate_reaming_table_json
+        json_script_path = os.path.join(os.path.dirname(__file__), 'remaining_tables_json')
+        print(json_script_path)
+        generate_json_files(db_name, json_script_path, details["target_schema"])
         # run_analyze_script(details["source_db"])
         # create_partition_alignment(details["source_db"], False,details["target_schema"])
         # disable_triggers_in_pg(details["target_schema"])
@@ -637,26 +912,37 @@ if __name__ == "__main__":
         # print(details["TargetEndpointArn"])
         # print(details["SourceEndpointArn"])
         # create_dms_task(details["SourceEndpointArn"],details["TargetEndpointArn"], 'full-load', tablemappings_json,details["dms_instance_arn"], tasksettings, tags,details["source_db"], dms_details["region"])
-        if details["product"] == "udm":
-            sql_schema =  details["source_db"]  + '_CDS'
-            source_schema = details["source_db"] + "." + sql_schema
-            print("source schema is" + source_schema)
-        sql_script = details["product"] + '_version.sql'
-        pg_script = details["product"] + '_pg_version.sql'
-        print(sql_script)
-        print(pg_script)
-        sql_version_script_path = os.path.join(os.path.dirname(__file__), sql_script)
-        pg_version_script_path = os.path.join(os.path.dirname(__file__), pg_script)
-        print(sql_version_script_path)
-        print(pg_version_script_path)
-        if details["product"] == "udm":
-            source_version = get_product_version(sql_version_script_path, "master", is_postgres=False,schema_name=source_schema)
-        else:
-            source_version = get_product_version(sql_version_script_path,"master",is_postgres=False,schema_name=details["source_db"])
-
-        target_version = get_product_version(pg_version_script_path, db_name, is_postgres=True,schema_name=details["target_schema"])
-        print(details["product"] + " source version is => " + source_version[0][0])
-        print(details["product"] + " target version is => " + target_version[0][0])
+    #     if details["product"] == "udm":
+    #         sql_schema =  details["source_db"]  + '_CDS'
+    #         source_schema = details["source_db"] + "." + sql_schema
+    #         print("source schema is" + source_schema)
+    #     sql_script = details["product"] + '_version.sql'
+    #     pg_script = details["product"] + '_pg_version.sql'
+    #     print(sql_script)
+    #     print(pg_script)
+    #     sql_version_script_path = os.path.join(os.path.dirname(__file__), sql_script)
+    #     pg_version_script_path = os.path.join(os.path.dirname(__file__), pg_script)
+    #     print(sql_version_script_path)
+    #     print(pg_version_script_path)
+    #     if details["product"] == "udm":
+    #         source_version = get_product_version(sql_version_script_path, "master", is_postgres=False,schema_name=source_schema)
+    #     else:
+    #         source_version = get_product_version(sql_version_script_path,"master",is_postgres=False,schema_name=details["source_db"])
+    #
+    #     target_version = get_product_version(pg_version_script_path, db_name, is_postgres=True,schema_name=details["target_schema"])
+    #     print(details["product"] + " source version is => " + source_version[0][0])
+    #     print(details["product"] + " target version is => " + target_version[0][0])
+    #     # Compare versions and append to the report
+    #     if source_version[0][0] == target_version[0][0]:
+    #         report.append(f"{db_name}: Versions match (Version: {source_version[0][0]})")
+    #         # print(f"{db_name}: Versions match (Version: {source_version})")
+    #     else:
+    #         report.append(f"{db_name}: Versions do not match (Source: {source_version[0][0]}), Target: {target_version[0][0]})")
+    #         # print(f"{db_name}: Versions do not match (Source: {source_version}, Target: {target_version[0][0]})")
+    #         version_status = False
+    # print("\n".join(report))
+    # if not version_status:
+    #     sys.exit("Stopping the application due to mismatched versions.")
 
 
 
