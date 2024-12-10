@@ -615,8 +615,171 @@ def get_product_version(script_input, db_name, is_postgres=False, schema_name=No
 # Function to generate a random 9-digit rule-id
 def generate_rule_id():
     return str(random.randint(100000000, 999999999))
+# Function to generate the DMS JSON structure
+def table_json(schema_name, table_name, input_schema_name,table_category, schema_table_pairs = []):
+    if table_category == "partition_table_json":
+
+        return {
+            "rules": [
+                {
+                    "rule-type": "transformation",
+                    "rule-id": generate_rule_id(),
+                    "rule-name": generate_rule_id(),
+                    "rule-target": "table",
+                    "object-locator": {
+                        "schema-name": schema_name,
+                        "table-name": table_name
+                    },
+                    "parallel-load": None,
+                    "rule-action": "convert-lowercase",
+                    "value": None,
+                    "old-value": None
+                },
+                {
+                    "rule-type": "transformation",
+                    "rule-id": generate_rule_id(),
+                    "rule-name": generate_rule_id(),
+                    "rule-target": "schema",
+                    "object-locator": {
+                        "schema-name": schema_name
+                    },
+                    "parallel-load": None,
+                    "rule-action": "rename",
+                    "value": input_schema_name.lower(),
+                    "old-value": None
+                },
+                {
+                    "rule-type": "selection",
+                    "rule-id": generate_rule_id(),
+                    "rule-name": generate_rule_id(),
+                    "object-locator": {
+                        "schema-name": schema_name,
+                        "table-name": table_name
+                    },
+                    "rule-action": "include",
+                    "filters": []
+                },
+                {
+                    "rule-type": "table-settings",
+                    "rule-id": generate_rule_id(),
+                    "rule-name": generate_rule_id(),
+                    "object-locator": {
+                        "schema-name": schema_name,
+                        "table-name": table_name
+                    },
+                    "parallel-load": {
+                        "type": "partitions-auto"
+                    }
+                }
+            ]
+        }
+    elif table_category == "non_partition_table_json":
+        return {
+            "rules": [
+                {
+                    "rule-type": "transformation",
+                    "rule-id": generate_rule_id(),
+                    "rule-name": generate_rule_id(),
+                    "rule-target": "table",
+                    "object-locator": {
+                        "schema-name": schema_name,
+                        "table-name": table_name
+                    },
+                    "parallel-load": None,
+                    "rule-action": "convert-lowercase",
+                    "value": None,
+                    "old-value": None
+                },
+                {
+                    "rule-type": "transformation",
+                    "rule-id": generate_rule_id(),
+                    "rule-name": generate_rule_id(),
+                    "rule-target": "schema",
+                    "object-locator": {
+                        "schema-name": schema_name
+                    },
+                    "parallel-load": None,
+                    "rule-action": "rename",
+                    "value": input_schema_name.lower(),
+                    "old-value": None
+                },
+                {
+                    "rule-type": "selection",
+                    "rule-id": generate_rule_id(),
+                    "rule-name": generate_rule_id(),
+                    "object-locator": {
+                        "schema-name": schema_name,
+                        "table-name": table_name
+                    },
+                    "rule-action": "include"
+                }
+            ]
+        }
+    else:
+        remaining_tables_rules = []
+
+        for schema_name, table_name in schema_table_pairs:
+            # Add exclude rules for already allocated tables
+            # for schema, table_name in allocated_tables:
+            exclude_rule = {
+                "rule-type": "selection",
+                "rule-id": generate_rule_id(),
+                "rule-name": generate_rule_id(),
+                "object-locator": {
+                    "schema-name": schema_name,
+                    "table-name": table_name
+                },
+                "rule-action": "exclude",
+                "filters": []
+            }
+            remaining_tables_rules.append(exclude_rule)
+
+        print(remaining_tables_rules)
+        # Add a single include rule for all remaining tables in the schema
+        remaining_json = {
+            "rules": [
+                         {
+                             "rule-type": "transformation",
+                             "rule-id": generate_rule_id(),
+                             "rule-name": generate_rule_id(),
+                             "rule-target": "table",
+                             "object-locator": {
+                                 "schema-name": schema_name,
+                                 "table-name": "%"
+                             },
+                             "rule-action": "convert-lowercase",
+                             "value": None,
+                             "old-value": None
+                         },
+                         {
+                             "rule-type": "transformation",
+                             "rule-id": generate_rule_id(),
+                             "rule-name": generate_rule_id(),
+                             "rule-target": "schema",
+                             "object-locator": {
+                                 "schema-name": schema_name
+                             },
+                             "rule-action": "rename",
+                             "value": input_schema_name.lower(),
+                             "old-value": None
+                         },
+                         {
+                             "rule-type": "selection",
+                             "rule-id": generate_rule_id(),
+                             "rule-name": generate_rule_id(),
+                             "object-locator": {
+                                 "schema-name": schema_name,
+                                 "table-name": "%"
+                             },
+                             "rule-action": "include",
+                             "filters": []
+                         }
+                     ] + remaining_tables_rules
+        }
+
+        return remaining_json
 # Function to generate the DMS JSON structure for a single partitioned table
-def generate_partition_table_json(schema_name, table_name, input_schema_name):
+def partition_table_json(schema_name, table_name, input_schema_name):
     return {
         "rules": [
             {
@@ -672,7 +835,7 @@ def generate_partition_table_json(schema_name, table_name, input_schema_name):
         ]
     }
 # Function to generate the DMS JSON structure for non-partition tables, including HugeTables
-def generate_non_partition_table_json(schema_name, table, input_schema_name):
+def non_partition_table_json(schema_name, table, input_schema_name):
     return {
         "rules": [
             {
@@ -715,7 +878,7 @@ def generate_non_partition_table_json(schema_name, table, input_schema_name):
         ]
     }
 # Function to generate the DMS JSON structure for remaining tables
-def generate_remaining_tables_json(schema_name, input_schema_name, allocated_tables):
+def remaining_tables_json(schema_name, input_schema_name, allocated_tables):
     remaining_tables_rules = []
 
     # Add exclude rules for already allocated tables
@@ -777,13 +940,6 @@ def generate_remaining_tables_json(schema_name, input_schema_name, allocated_tab
 
     return remaining_json
 def generate_json_files(db_name, script_input, target_schema):
-    # Create folders for each category if they don't exist
-    # folders = {
-    #     "PartitionTables": "non_partition_table_json",
-    #     "HugeTables": "partition_table_json",
-    #     "LobTables": "lob_table_json",
-    #     "RemainingTables": "remaining_tables_json.sql"
-    # }
     folders = ["non_partition_table_json", "partition_table_json", "lob_table_json", "remaining_tables_json" ]
     script_input_name = script_input + '.sql'
 
@@ -818,57 +974,41 @@ def generate_json_files(db_name, script_input, target_schema):
     print("Number of tables fetched:", len(tables))
 
     allocated_tables = []
-    remaining_schemas = set()
-
+    # remaining_schemas = set()
+    func_category = os.path.basename(script_input)
     for table in tables:
         if table.TableName == "ActMigListTables":
             # Skip this table entirely
             continue
 
-        dms_json = generate_partition_table_json(table.SchemaName, table.TableName, target_schema)
+        print("Category: " + func_category)
+        if func_category == "remaining_tables_json":
+            # dms_json = table_json(table.SchemaName, table.TableName, target_schema, func_category)
+            allocated_tables.append((table.SchemaName, table.TableName))
+        else:
+            dms_json = table_json(table.SchemaName, table.TableName, target_schema, func_category)
         folder = script_input
         filename = f"{folder}/dms_task_{table.SchemaName}_{table.TableName}.json"
-        allocated_tables.append((table.SchemaName, table.TableName))
 
-        # Write the JSON file for PartitionTables
+        if func_category != "remaining_tables_json":
+
+            # Write the JSON file for PartitionTables
+            print(f"Creating JSON file: {filename}")
+            with open(filename, 'w') as json_file:
+                json.dump(dms_json, json_file, indent=4)
+
+    print(allocated_tables)
+    if func_category == "remaining_tables_json":
+        dms_json = table_json(table.SchemaName, table.TableName, target_schema, func_category, allocated_tables)
+        folder = script_input
+        filename = f"{folder}/dms_task_{table.SchemaName}_{table.TableName}.json"
         print(f"Creating JSON file: {filename}")
         with open(filename, 'w') as json_file:
             json.dump(dms_json, json_file, indent=4)
 
-        # elif table.TaskCategory == "DedicatedNonPartitionedTask":
-        #     dms_json = generate_non_partition_table_json(table.SchemaName, table, input_schema_name)
-        #     folder = folders["HugeTables"]
-        #     filename = f"{folder}/dms_task_{table.SchemaName}_{table.TableName}.json"
-        #     allocated_tables.append((table.SchemaName, table.TableName))
-        #
-        #     # Write the JSON file for HugeTables
-        #     print(f"Creating JSON file: {filename}")
-        #     with open(filename, 'w') as json_file:
-        #         json.dump(dms_json, json_file, indent=4)
-        #
-        # elif table.TaskCategory == "CollectiveLobTask":
-        #     dms_json = generate_non_partition_table_json(table.SchemaName, table, input_schema_name)
-        #     folder = folders["LobTables"]
-        #     filename = f"{folder}/dms_task_{table.SchemaName}_{table.TableName}.json"
-        #     allocated_tables.append((table.SchemaName, table.TableName))
-        #
-        #     # Write the JSON file for LobTables
-        #     print(f"Creating JSON file: {filename}")
-        #     with open(filename, 'w') as json_file:
-        #         json.dump(dms_json, json_file, indent=4)
-        #
-        # elif table.TaskCategory == "CollectiveRemainingTask":
-        #     remaining_schemas.add(table.SchemaName)
 
-    # # Generate and save JSON file for RemainingTables
-    # for schema_name in remaining_schemas:
-    #     remaining_json = generate_remaining_tables_json(schema_name, input_schema_name, allocated_tables)
-    #     folder = folders["RemainingTables"]
-    #     filename = f"{folder}/dms_task_{schema_name}_remaining_tables.json"
-    #
-    #     print(f"Creating JSON file: {filename}")
-    #     with open(filename, 'w') as json_file:
-    #         json.dump(remaining_json, json_file, indent=4)
+
+
 
     conn.close()
 
@@ -892,14 +1032,15 @@ if __name__ == "__main__":
         generate_json_files(db_name, json_script_path, details["target_schema"])
 
         #####generate_lob_table_json
-        json_script_path = os.path.join(os.path.dirname(__file__), 'lob_table_json')
-        print(json_script_path)
-        generate_json_files(db_name, json_script_path, details["target_schema"])
+        # json_script_path = os.path.join(os.path.dirname(__file__), 'lob_table_json')
+        # print(json_script_path)
+        # generate_json_files(db_name, json_script_path, details["target_schema"])
 
         #####generate_reaming_table_json
         json_script_path = os.path.join(os.path.dirname(__file__), 'remaining_tables_json')
         print(json_script_path)
         generate_json_files(db_name, json_script_path, details["target_schema"])
+
         # run_analyze_script(details["source_db"])
         # create_partition_alignment(details["source_db"], False,details["target_schema"])
         # disable_triggers_in_pg(details["target_schema"])
