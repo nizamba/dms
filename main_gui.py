@@ -27,10 +27,10 @@ version_status = True
 
 # MSSQL Connection Details
 mssql_connection = {
-    "host": "10.220.3.97",
+    "host": "10.224.0.175",
     "port": 1433,  # Default MSSQL port
     "user": "sa",
-    "password": "Password1!",
+    "password": "Actimize1",
     "database": "master"  # Default database; change as needed
 }
 
@@ -45,73 +45,39 @@ rds_postgres_connection = {
 
 # Dictionary to hold migration details for each database
 databases_to_migrate = {
-    "DemoDB": {
+    "LIN_CDD_CDD_APP": {
         # "source_db": "dbo.case_managment_versions",
-        "source_db": "DemoDB",
+        "source_db": "LIN_CDD_CDD_APP",
+        "target_schema": "nizlog14_rcm",
+        "dms_instance_arn": "None",
+        "SourceEndpointArn": None,
+        "TargetEndpointArn": None,
+        "product": "cdd_app"
+    },
+    "LIN_CDD_CDD_PRF": {
+        "source_db": "LIN_CDD_CDD_PRF",
+        "target_schema": "nizlog14_rcm",
+        "dms_instance_arn": "None",
+        "SourceEndpointArn": None,
+        "TargetEndpointArn": None,
+        "product": "cdd_prf"
+    },
+    "UDM": {
+        "source_db": "UDM",
+        "target_schema": "nizlog14_udm_cds",
+        "dms_instance_arn": "None",
+        "SourceEndpointArn": None,
+        "TargetEndpointArn": None,
+        "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
+    },
+    "LIN_CDD_RCM": {
+        "source_db": "LIN_CDD_RCM",
         "target_schema": "nizlog14_rcm",
         "dms_instance_arn": "None",
         "SourceEndpointArn": None,
         "TargetEndpointArn": None,
         "product": "rcm"
     }
-    # "ccdsa_RCM": {
-    #     # "source_db": "dbo.case_managment_versions",
-    #     "source_db": "cddsa_RCM",
-    #     "target_schema": "nizlog14_rcm",
-    #     "dms_instance_arn": "None",
-    #     "SourceEndpointArn": None,
-    #     "TargetEndpointArn": None,
-    #     "product": "rcm"
-    # },
-    # "cddsa_CDD_APP": {
-    #     "source_db": "cddsa_CDD_APP",
-    #     "target_schema": "nizlog14_rcm",
-    #     "dms_instance_arn": "None",
-    #     "SourceEndpointArn": None,
-    #     "TargetEndpointArn": None,
-    #     "product": "cdd_app"
-    # },
-    # "cddsa_CDD_PRF": {
-    #     "source_db": "cddsa_CDD_PRF",
-    #     "target_schema": "nizlog14_rcm",
-    #     "dms_instance_arn": "None",
-    #     "SourceEndpointArn": None,
-    #     "TargetEndpointArn": None,
-    #     "product": "cdd_prf"
-    # },
-    # "cddsa_UDM": {
-    #     "source_db": "cddsa_UDM",
-    #     "target_schema": "nizlog14_udm_cds",
-    #     "dms_instance_arn": "None",
-    #     "SourceEndpointArn": None,
-    #     "TargetEndpointArn": None,
-    #     "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
-    # }
-    # ,
-    # "md": {
-    #     "source_db": "cddsa_RCM",
-    #     "target_schema": "nizlog14_rcm",
-    #     "dms_instance_arn": "None",
-    #     "SourceEndpointArn": None,
-    #     "TargetEndpointArn": None,
-    #     "product": "md"
-    # },
-    # "bbun04_SAM_PRF": {
-    #     "source_db": "bbun04_SAM_PRF",
-    #     "target_schema": "nizlog14_rcm",
-    #     "dms_instance_arn": "None",
-    #     "SourceEndpointArn": None,
-    #     "TargetEndpointArn": None,
-    #     "product": "sam_prf"
-    # },
-    # "bbun04_SAM_APP": {
-    #     "source_db": "bbun04_SAM_APP",
-    #     "target_schema": "nizlog14_rcm",
-    #     "dms_instance_arn": "None",
-    #     "SourceEndpointArn": None,
-    #     "TargetEndpointArn": None,
-    #     "product": "sam_app"
-    # }
     # Add more databases as needed
 }
 
@@ -616,7 +582,7 @@ def get_product_version(script_input, db_name, is_postgres=False, schema_name=No
 def generate_rule_id():
     return str(random.randint(100000000, 999999999))
 # Function to generate the DMS JSON structure
-def table_json(schema_name, table_name, input_schema_name,table_category, schema_table_pairs = []):
+def table_json(schema_name = None, table_name = None, input_schema_name = None,table_category = None, schema_table_pairs = []):
     if table_category == "partition_table_json":
 
         return {
@@ -674,6 +640,48 @@ def table_json(schema_name, table_name, input_schema_name,table_category, schema
             ]
         }
     elif table_category == "non_partition_table_json":
+        return {
+            "rules": [
+                {
+                    "rule-type": "transformation",
+                    "rule-id": generate_rule_id(),
+                    "rule-name": generate_rule_id(),
+                    "rule-target": "table",
+                    "object-locator": {
+                        "schema-name": schema_name,
+                        "table-name": table_name
+                    },
+                    "parallel-load": None,
+                    "rule-action": "convert-lowercase",
+                    "value": None,
+                    "old-value": None
+                },
+                {
+                    "rule-type": "transformation",
+                    "rule-id": generate_rule_id(),
+                    "rule-name": generate_rule_id(),
+                    "rule-target": "schema",
+                    "object-locator": {
+                        "schema-name": schema_name
+                    },
+                    "parallel-load": None,
+                    "rule-action": "rename",
+                    "value": input_schema_name.lower(),
+                    "old-value": None
+                },
+                {
+                    "rule-type": "selection",
+                    "rule-id": generate_rule_id(),
+                    "rule-name": generate_rule_id(),
+                    "object-locator": {
+                        "schema-name": schema_name,
+                        "table-name": table_name
+                    },
+                    "rule-action": "include"
+                }
+            ]
+        }
+    elif table_category == "lob_table_json":
         return {
             "rules": [
                 {
@@ -940,12 +948,12 @@ def remaining_tables_json(schema_name, input_schema_name, allocated_tables):
 
     return remaining_json
 def generate_json_files(db_name, script_input, target_schema):
-    folders = ["non_partition_table_json", "partition_table_json", "lob_table_json", "remaining_tables_json" ]
+    folders = ["non_partition_table_json", "partition_table_json", "lob_table_json", "remaining_table_json" ]
     script_input_name = script_input + '.sql'
 
     for folder in folders:
-        if not os.path.exists(folder):
-            os.makedirs(folder)
+        if not os.path.exists(folder + "/" + db_name):
+            os.makedirs(folder + "/" + db_name)
 
     # Handle file or direct SQL input
     if os.path.isfile(script_input_name):
@@ -982,15 +990,15 @@ def generate_json_files(db_name, script_input, target_schema):
             continue
 
         print("Category: " + func_category)
-        if func_category == "remaining_tables_json":
+        if func_category == "remaining_table_json":
             # dms_json = table_json(table.SchemaName, table.TableName, target_schema, func_category)
             allocated_tables.append((table.SchemaName, table.TableName))
         else:
             dms_json = table_json(table.SchemaName, table.TableName, target_schema, func_category)
         folder = script_input
-        filename = f"{folder}/dms_task_{table.SchemaName}_{table.TableName}.json"
+        filename = f"{folder}/{db_name}/dms_task_{table.SchemaName}_{table.TableName}.json"
 
-        if func_category != "remaining_tables_json":
+        if func_category != "remaining_table_json":
 
             # Write the JSON file for PartitionTables
             print(f"Creating JSON file: {filename}")
@@ -998,10 +1006,10 @@ def generate_json_files(db_name, script_input, target_schema):
                 json.dump(dms_json, json_file, indent=4)
 
     print(allocated_tables)
-    if func_category == "remaining_tables_json":
-        dms_json = table_json(table.SchemaName, table.TableName, target_schema, func_category, allocated_tables)
+    if func_category == "remaining_table_json" and allocated_tables is not None :
+        dms_json = table_json(input_schema_name = target_schema, schema_table_pairs = allocated_tables)
         folder = script_input
-        filename = f"{folder}/dms_task_{table.SchemaName}_{table.TableName}.json"
+        filename = f"{folder}/{db_name}/dms_task_{table.SchemaName}_{table.TableName}.json"
         print(f"Creating JSON file: {filename}")
         with open(filename, 'w') as json_file:
             json.dump(dms_json, json_file, indent=4)
@@ -1014,13 +1022,19 @@ def generate_json_files(db_name, script_input, target_schema):
 
 
 if __name__ == "__main__":
+
+
+
+
     with open('tablemappings.json', 'r') as file:
         tablemappings = json.load(file)
     # Convert the dictionary to a JSON string
     tablemappings_json = json.dumps(tablemappings)
     # Access or print the data
     print(tablemappings)
+
     for db_name, details in databases_to_migrate.items():
+        run_analyze_script(details["source_db"])
         #####generate_partition_table_json
         json_script_path = os.path.join(os.path.dirname(__file__), 'partition_table_json')
         print(json_script_path)
@@ -1032,16 +1046,16 @@ if __name__ == "__main__":
         generate_json_files(db_name, json_script_path, details["target_schema"])
 
         #####generate_lob_table_json
-        # json_script_path = os.path.join(os.path.dirname(__file__), 'lob_table_json')
-        # print(json_script_path)
-        # generate_json_files(db_name, json_script_path, details["target_schema"])
-
-        #####generate_reaming_table_json
-        json_script_path = os.path.join(os.path.dirname(__file__), 'remaining_tables_json')
+        json_script_path = os.path.join(os.path.dirname(__file__), 'lob_table_json')
         print(json_script_path)
         generate_json_files(db_name, json_script_path, details["target_schema"])
 
-        # run_analyze_script(details["source_db"])
+        #####generate_reaming_table_json
+        json_script_path = os.path.join(os.path.dirname(__file__), 'remaining_table_json')
+        print(json_script_path)
+        generate_json_files(db_name, json_script_path, details["target_schema"])
+
+        #
         # create_partition_alignment(details["source_db"], False,details["target_schema"])
         # disable_triggers_in_pg(details["target_schema"])
         # drop_fks_in_pg(details["target_schema"])
@@ -1053,25 +1067,25 @@ if __name__ == "__main__":
         # print(details["TargetEndpointArn"])
         # print(details["SourceEndpointArn"])
         # create_dms_task(details["SourceEndpointArn"],details["TargetEndpointArn"], 'full-load', tablemappings_json,details["dms_instance_arn"], tasksettings, tags,details["source_db"], dms_details["region"])
-    #     if details["product"] == "udm":
-    #         sql_schema =  details["source_db"]  + '_CDS'
-    #         source_schema = details["source_db"] + "." + sql_schema
-    #         print("source schema is" + source_schema)
-    #     sql_script = details["product"] + '_version.sql'
-    #     pg_script = details["product"] + '_pg_version.sql'
-    #     print(sql_script)
-    #     print(pg_script)
-    #     sql_version_script_path = os.path.join(os.path.dirname(__file__), sql_script)
+        if details["product"] == "udm":
+            sql_schema =  details["source_db"]  + '_CDS'
+            source_schema = details["source_db"] + "." + sql_schema
+            print("source schema is" + source_schema)
+        sql_script = details["product"] + '_version.sql'
+        pg_script = details["product"] + '_pg_version.sql'
+        print(sql_script)
+        print(pg_script)
+        sql_version_script_path = os.path.join(os.path.dirname(__file__), sql_script)
     #     pg_version_script_path = os.path.join(os.path.dirname(__file__), pg_script)
-    #     print(sql_version_script_path)
-    #     print(pg_version_script_path)
-    #     if details["product"] == "udm":
-    #         source_version = get_product_version(sql_version_script_path, "master", is_postgres=False,schema_name=source_schema)
-    #     else:
-    #         source_version = get_product_version(sql_version_script_path,"master",is_postgres=False,schema_name=details["source_db"])
+        print(sql_version_script_path)
+        # print(pg_version_script_path)
+        if details["product"] == "udm":
+            source_version = get_product_version(sql_version_script_path, "master", is_postgres=False,schema_name=source_schema)
+        else:
+            source_version = get_product_version(sql_version_script_path,"master",is_postgres=False,schema_name=details["source_db"])
     #
     #     target_version = get_product_version(pg_version_script_path, db_name, is_postgres=True,schema_name=details["target_schema"])
-    #     print(details["product"] + " source version is => " + source_version[0][0])
+        print(details["product"] + " source version is => " + source_version[0][0])
     #     print(details["product"] + " target version is => " + target_version[0][0])
     #     # Compare versions and append to the report
     #     if source_version[0][0] == target_version[0][0]:
