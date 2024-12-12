@@ -1,0 +1,315 @@
+{
+    "rules": [
+        {
+            "rule-type": "transformation",
+            "rule-id": "672019385",
+            "rule-name": "609471240",
+            "rule-target": "table",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "%"
+            },
+            "rule-action": "convert-lowercase",
+            "value": null,
+            "old-value": null
+        },
+        {
+            "rule-type": "transformation",
+            "rule-id": "616994431",
+            "rule-name": "136116720",
+            "rule-target": "schema",
+            "object-locator": {
+                "schema-name": "UDM_CDS"
+            },
+            "rule-action": "rename",
+            "value": "nizlog14_udm_cds",
+            "old-value": null
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "228166880",
+            "rule-name": "150801774",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "%"
+            },
+            "rule-action": "include",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "569713141",
+            "rule-name": "936101870",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "UDM_MIGRATION_QUEUE"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "250590043",
+            "rule-name": "936103958",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "ACCOUNT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "396052563",
+            "rule-name": "567903790",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "ACCOUNT_ACCOUNT_RELATION"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "743195064",
+            "rule-name": "200739114",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "ADDRESS"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "918867335",
+            "rule-name": "935170121",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "DAY"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "995933750",
+            "rule-name": "277411624",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "DOCUMENT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "807984340",
+            "rule-name": "808797161",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "DW_BATCH_TABLES"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "515343910",
+            "rule-name": "795258028",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "EMAIL"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "319236186",
+            "rule-name": "591121362",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "ENTITY"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "391072053",
+            "rule-name": "184170256",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "ENTITY_ADDRESS_RELATION"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "700968679",
+            "rule-name": "721133851",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "ENTITY_COUNTRY_RELATION"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "291787635",
+            "rule-name": "451870667",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "ENTITY_DOCUMENT_RELATION"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "913508741",
+            "rule-name": "563822726",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "ENTITY_EMAIL_RELATION"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "740713792",
+            "rule-name": "846925235",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "ENTITY_PHONE_RELATION"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "274915353",
+            "rule-name": "249280199",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "LOAN"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "856377331",
+            "rule-name": "714926264",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "LOAN_COLLATERAL"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "927989278",
+            "rule-name": "810632830",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "LOAN_GUARANTOR"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "553300139",
+            "rule-name": "689219517",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "PARTY"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "598846127",
+            "rule-name": "603939083",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "PARTY_ACCOUNT_RELATION"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "905107902",
+            "rule-name": "231284979",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "PARTY_ALIAS"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "891864111",
+            "rule-name": "317132233",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "PARTY_BUSINESS_UNIT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "930427052",
+            "rule-name": "961034940",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "PARTY_PARTY_RELATION"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "448870293",
+            "rule-name": "121565761",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "PERIODIC_ACTIVITY"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "239071496",
+            "rule-name": "568794833",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "PERIODIC_ACTIVITY_EXPECTED"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "264050804",
+            "rule-name": "579640917",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "PHONE"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        }
+    ]
+}

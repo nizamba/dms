@@ -1,0 +1,41 @@
+{
+    "rules": [
+        {
+            "rule-type": "transformation",
+            "rule-id": "549872962",
+            "rule-name": "490485344",
+            "rule-target": "table",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "EMAIL"
+            },
+            "parallel-load": null,
+            "rule-action": "convert-lowercase",
+            "value": null,
+            "old-value": null
+        },
+        {
+            "rule-type": "transformation",
+            "rule-id": "286443655",
+            "rule-name": "653326742",
+            "rule-target": "schema",
+            "object-locator": {
+                "schema-name": "UDM_CDS"
+            },
+            "parallel-load": null,
+            "rule-action": "rename",
+            "value": "nizlog14_udm_cds",
+            "old-value": null
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "128472312",
+            "rule-name": "891165180",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "EMAIL"
+            },
+            "rule-action": "include"
+        }
+    ]
+}

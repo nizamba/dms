@@ -1,0 +1,41 @@
+{
+    "rules": [
+        {
+            "rule-type": "transformation",
+            "rule-id": "493092685",
+            "rule-name": "105993429",
+            "rule-target": "table",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "SQL_FOR_BATCH_LOG"
+            },
+            "parallel-load": null,
+            "rule-action": "convert-lowercase",
+            "value": null,
+            "old-value": null
+        },
+        {
+            "rule-type": "transformation",
+            "rule-id": "269296670",
+            "rule-name": "945713935",
+            "rule-target": "schema",
+            "object-locator": {
+                "schema-name": "dbo"
+            },
+            "parallel-load": null,
+            "rule-action": "rename",
+            "value": "nizlog14_rcm",
+            "old-value": null
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "996299269",
+            "rule-name": "689869929",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "SQL_FOR_BATCH_LOG"
+            },
+            "rule-action": "include"
+        }
+    ]
+}

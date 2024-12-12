@@ -1,0 +1,41 @@
+{
+    "rules": [
+        {
+            "rule-type": "transformation",
+            "rule-id": "384510196",
+            "rule-name": "957927156",
+            "rule-target": "table",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "LOAN_H_LATEST"
+            },
+            "parallel-load": null,
+            "rule-action": "convert-lowercase",
+            "value": null,
+            "old-value": null
+        },
+        {
+            "rule-type": "transformation",
+            "rule-id": "967166426",
+            "rule-name": "824904096",
+            "rule-target": "schema",
+            "object-locator": {
+                "schema-name": "dbo"
+            },
+            "parallel-load": null,
+            "rule-action": "rename",
+            "value": "nizlog14_rcm",
+            "old-value": null
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "842277901",
+            "rule-name": "860211128",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "LOAN_H_LATEST"
+            },
+            "rule-action": "include"
+        }
+    ]
+}

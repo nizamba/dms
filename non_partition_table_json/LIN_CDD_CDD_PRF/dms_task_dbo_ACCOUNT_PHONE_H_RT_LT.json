@@ -1,0 +1,41 @@
+{
+    "rules": [
+        {
+            "rule-type": "transformation",
+            "rule-id": "287823291",
+            "rule-name": "235676151",
+            "rule-target": "table",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_PHONE_H_RT_LT"
+            },
+            "parallel-load": null,
+            "rule-action": "convert-lowercase",
+            "value": null,
+            "old-value": null
+        },
+        {
+            "rule-type": "transformation",
+            "rule-id": "200958729",
+            "rule-name": "220698713",
+            "rule-target": "schema",
+            "object-locator": {
+                "schema-name": "dbo"
+            },
+            "parallel-load": null,
+            "rule-action": "rename",
+            "value": "nizlog14_rcm",
+            "old-value": null
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "678295342",
+            "rule-name": "409213847",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_PHONE_H_RT_LT"
+            },
+            "rule-action": "include"
+        }
+    ]
+}

@@ -1,0 +1,41 @@
+{
+    "rules": [
+        {
+            "rule-type": "transformation",
+            "rule-id": "620862877",
+            "rule-name": "738519919",
+            "rule-target": "table",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "LOAN"
+            },
+            "parallel-load": null,
+            "rule-action": "convert-lowercase",
+            "value": null,
+            "old-value": null
+        },
+        {
+            "rule-type": "transformation",
+            "rule-id": "411368138",
+            "rule-name": "653045029",
+            "rule-target": "schema",
+            "object-locator": {
+                "schema-name": "UDM_CDS"
+            },
+            "parallel-load": null,
+            "rule-action": "rename",
+            "value": "nizlog14_udm_cds",
+            "old-value": null
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "334188464",
+            "rule-name": "726273763",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "LOAN"
+            },
+            "rule-action": "include"
+        }
+    ]
+}

@@ -1,0 +1,41 @@
+{
+    "rules": [
+        {
+            "rule-type": "transformation",
+            "rule-id": "820056399",
+            "rule-name": "820138349",
+            "rule-target": "table",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "ACCOUNT_ACCOUNT_RELATION"
+            },
+            "parallel-load": null,
+            "rule-action": "convert-lowercase",
+            "value": null,
+            "old-value": null
+        },
+        {
+            "rule-type": "transformation",
+            "rule-id": "161835888",
+            "rule-name": "650727468",
+            "rule-target": "schema",
+            "object-locator": {
+                "schema-name": "UDM_CDS"
+            },
+            "parallel-load": null,
+            "rule-action": "rename",
+            "value": "nizlog14_udm_cds",
+            "old-value": null
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "373204715",
+            "rule-name": "813340250",
+            "object-locator": {
+                "schema-name": "UDM_CDS",
+                "table-name": "ACCOUNT_ACCOUNT_RELATION"
+            },
+            "rule-action": "include"
+        }
+    ]
+}

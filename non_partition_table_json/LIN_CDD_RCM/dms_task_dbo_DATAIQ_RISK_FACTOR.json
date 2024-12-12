@@ -1,0 +1,41 @@
+{
+    "rules": [
+        {
+            "rule-type": "transformation",
+            "rule-id": "902493531",
+            "rule-name": "310538651",
+            "rule-target": "table",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "DATAIQ_RISK_FACTOR"
+            },
+            "parallel-load": null,
+            "rule-action": "convert-lowercase",
+            "value": null,
+            "old-value": null
+        },
+        {
+            "rule-type": "transformation",
+            "rule-id": "690800346",
+            "rule-name": "118439455",
+            "rule-target": "schema",
+            "object-locator": {
+                "schema-name": "dbo"
+            },
+            "parallel-load": null,
+            "rule-action": "rename",
+            "value": "nizlog14_rcm",
+            "old-value": null
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "310842541",
+            "rule-name": "342065771",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "DATAIQ_RISK_FACTOR"
+            },
+            "rule-action": "include"
+        }
+    ]
+}

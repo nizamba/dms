@@ -1,0 +1,909 @@
+{
+    "rules": [
+        {
+            "rule-type": "transformation",
+            "rule-id": "683529873",
+            "rule-name": "779274592",
+            "rule-target": "table",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "%"
+            },
+            "rule-action": "convert-lowercase",
+            "value": null,
+            "old-value": null
+        },
+        {
+            "rule-type": "transformation",
+            "rule-id": "257593186",
+            "rule-name": "510308995",
+            "rule-target": "schema",
+            "object-locator": {
+                "schema-name": "dbo"
+            },
+            "rule-action": "rename",
+            "value": "nizlog14_rcm",
+            "old-value": null
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "743401634",
+            "rule-name": "783926395",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "%"
+            },
+            "rule-action": "include",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "767181517",
+            "rule-name": "883122982",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ENTITY_BENEOWNERS_DATA_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "667944936",
+            "rule-name": "926219955",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "DOC_DATA_DETECTION"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "268917278",
+            "rule-name": "127487933",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "DETECTED_DOCS_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "413634348",
+            "rule-name": "405935153",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "SQL_FOR_BATCH_LOG"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "108097719",
+            "rule-name": "300955370",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ENTITY_BENEOWNERS_DATA_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "727094767",
+            "rule-name": "762420185",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_ADDRESS_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "950517564",
+            "rule-name": "843837772",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_ADDRESS_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "579112687",
+            "rule-name": "648354202",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_ADDRESS_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "162751759",
+            "rule-name": "123536675",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_EMAIL_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "226648933",
+            "rule-name": "752562541",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_EMAIL_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "522786948",
+            "rule-name": "756344186",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_EMAIL_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "249794873",
+            "rule-name": "314358464",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "988723624",
+            "rule-name": "305072397",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "509952638",
+            "rule-name": "707171498",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "781602707",
+            "rule-name": "759568111",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_PHONE_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "105058715",
+            "rule-name": "116937057",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_PHONE_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "842676829",
+            "rule-name": "473637934",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "ACCOUNT_PHONE_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "379475552",
+            "rule-name": "782469738",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "CDD_ALERT_MEMBERS"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "734938633",
+            "rule-name": "242435439",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "CDD_PRF_ACCT_SERVICES_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "769009604",
+            "rule-name": "113313766",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "CDD_PRF_ACCT_SERVICES_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "603367207",
+            "rule-name": "900232342",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "CDD_PRF_ACCT_SERVICES_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "968022816",
+            "rule-name": "505654215",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "CDD_PRF_DOC_TRACKING_ALERTS"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "949545991",
+            "rule-name": "247894603",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "CDD_PRF_EBD_ALERTS"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "688147478",
+            "rule-name": "917683481",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "CDD_PRF_PARTY_BATCH"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "123184306",
+            "rule-name": "497196384",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "CDD_PRF_PARTY_DOCS_ALERTS"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "936002827",
+            "rule-name": "927029578",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "CDD_PRF_PARTY_PROPERTIES"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "376580768",
+            "rule-name": "223299050",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "CDD_PRF_PARTY_PROPERTIES_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "931521335",
+            "rule-name": "436477447",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "CDD_PRF_QA_QUESTIONS"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "407738551",
+            "rule-name": "542752446",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "COUNTRY_RELATIONS_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "243299446",
+            "rule-name": "270504720",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "COUNTRY_RELATIONS_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "310140382",
+            "rule-name": "697182885",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "COUNTRY_RELATIONS_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "412947502",
+            "rule-name": "983160889",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "DATA_INT_RF_ENTITY_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "191359777",
+            "rule-name": "638965649",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "DATA_INT_RF_ENTITY_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "567236154",
+            "rule-name": "972266239",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "DATA_INT_RF_ENTITY_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "451512840",
+            "rule-name": "782173174",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "LOAN_COLLATERAL_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "495492780",
+            "rule-name": "832857455",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "LOAN_COLLATERAL_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "409497125",
+            "rule-name": "515734716",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "LOAN_COLLATERAL_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "688416151",
+            "rule-name": "103245363",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "LOAN_GUARANTOR_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "649727229",
+            "rule-name": "752448905",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "LOAN_GUARANTOR_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "751217561",
+            "rule-name": "964831060",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "LOAN_GUARANTOR_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "386542463",
+            "rule-name": "319009106",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "LOAN_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "440371505",
+            "rule-name": "587451879",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "LOAN_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "118132988",
+            "rule-name": "701767626",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "LOAN_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "831238917",
+            "rule-name": "456291372",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ACCOUNT_REL_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "538870107",
+            "rule-name": "217050114",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ACCOUNT_REL_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "187111850",
+            "rule-name": "878491942",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ACCOUNT_RELATIONS_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "561674660",
+            "rule-name": "196469781",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ADDRESS_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "155011730",
+            "rule-name": "166813530",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ADDRESS_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "320115333",
+            "rule-name": "112372397",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ADDRESS_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "176630808",
+            "rule-name": "568540166",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ALIAS_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "515827407",
+            "rule-name": "705823437",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ALIAS_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "729572332",
+            "rule-name": "843253318",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ALIAS_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "689260314",
+            "rule-name": "581742197",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_BU_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "548491804",
+            "rule-name": "543585500",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_BU_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "188824745",
+            "rule-name": "441776646",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_BU_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "389821937",
+            "rule-name": "262678734",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_EMAIL_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "758000395",
+            "rule-name": "707962129",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_EMAIL_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "165705672",
+            "rule-name": "146808288",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_EMAIL_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "725197301",
+            "rule-name": "397393903",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "724996559",
+            "rule-name": "741558977",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "594606368",
+            "rule-name": "926872547",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "243576981",
+            "rule-name": "507998056",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ID_DOCUMENTS_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "577648526",
+            "rule-name": "378296740",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ID_DOCUMENTS_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "847823621",
+            "rule-name": "940206553",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_ID_DOCUMENTS_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "802899667",
+            "rule-name": "492933059",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_PARTY_REL_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "118823055",
+            "rule-name": "663522902",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_PARTY_REL_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "256476180",
+            "rule-name": "460637096",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_PARTY_RELATIONS_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "478304284",
+            "rule-name": "961362352",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_PHONE_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "887966464",
+            "rule-name": "683016388",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_PHONE_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "218004418",
+            "rule-name": "982445934",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_PHONE_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "387612166",
+            "rule-name": "205637040",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_SERVICES_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "521234180",
+            "rule-name": "538612541",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_SERVICES_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "985095631",
+            "rule-name": "876033355",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "PARTY_SERVICES_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "149627889",
+            "rule-name": "537385710",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "POLICY_SCORING_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "180191969",
+            "rule-name": "153927768",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "POLICY_SCORING_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "890276570",
+            "rule-name": "506448033",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "POLICY_SCORING_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "267152449",
+            "rule-name": "840009339",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "RISK_SCORING_H"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "335296138",
+            "rule-name": "752797255",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "RISK_SCORING_H_LATEST"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        },
+        {
+            "rule-type": "selection",
+            "rule-id": "496842231",
+            "rule-name": "814434528",
+            "object-locator": {
+                "schema-name": "dbo",
+                "table-name": "RISK_SCORING_H_RT_LT"
+            },
+            "rule-action": "exclude",
+            "filters": []
+        }
+    ]
+}

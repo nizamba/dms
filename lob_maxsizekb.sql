@@ -1,0 +1,1 @@
+select top 1 MaxLOBSizeKB from [{{db_name}}].[dbo].[ActMigListTables]  where MaxLOBSizeKB > 1 order by MaxLOBSizeKB desc

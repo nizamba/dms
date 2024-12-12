@@ -27,7 +27,7 @@ version_status = True
 
 # MSSQL Connection Details
 mssql_connection = {
-    "host": "10.224.0.175",
+    "host": "10.224.0.33",
     "port": 1433,  # Default MSSQL port
     "user": "sa",
     "password": "Actimize1",
@@ -581,6 +581,250 @@ def get_product_version(script_input, db_name, is_postgres=False, schema_name=No
 # Function to generate a random 9-digit rule-id
 def generate_rule_id():
     return str(random.randint(100000000, 999999999))
+def settings_json(table_category=None, maxlob_calculated_value = "1"):
+    if table_category == "lob_table_json":
+        settings = {
+            "Logging": {
+                "EnableLogging": False,
+                "EnableLogContext": False,
+                "LogComponents": [
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "TRANSFORMATION"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "SOURCE_UNLOAD"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "IO"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "TARGET_LOAD"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "PERFORMANCE"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "SOURCE_CAPTURE"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "SORTER"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "REST_SERVER"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "VALIDATOR_EXT"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "TARGET_APPLY"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "TASK_MANAGER"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "TABLES_MANAGER"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "METADATA_MANAGER"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "FILE_FACTORY"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "COMMON"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "ADDONS"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "DATA_STRUCTURE"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "COMMUNICATION"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "FILE_TRANSFER"}
+                ],
+                "CloudWatchLogGroup": None,
+                "CloudWatchLogStream": None
+            },
+            "StreamBufferSettings": {
+                "StreamBufferCount": 3,
+                "CtrlStreamBufferSizeInMB": 5,
+                "StreamBufferSizeInMB": 8
+            },
+            "ErrorBehavior": {
+                "FailOnNoTablesCaptured": True,
+                "ApplyErrorUpdatePolicy": "LOG_ERROR",
+                "FailOnTransactionConsistencyBreached": False,
+                "RecoverableErrorThrottlingMax": 1800,
+                "DataErrorEscalationPolicy": "SUSPEND_TABLE",
+                "ApplyErrorEscalationCount": 0,
+                "RecoverableErrorStopRetryAfterThrottlingMax": True,
+                "RecoverableErrorThrottling": True,
+                "ApplyErrorFailOnTruncationDdl": False,
+                "DataMaskingErrorPolicy": "STOP_TASK",
+                "DataTruncationErrorPolicy": "LOG_ERROR",
+                "ApplyErrorInsertPolicy": "LOG_ERROR",
+                "EventErrorPolicy": "IGNORE",
+                "ApplyErrorEscalationPolicy": "LOG_ERROR",
+                "RecoverableErrorCount": -1,
+                "DataErrorEscalationCount": 0,
+                "TableErrorEscalationPolicy": "STOP_TASK",
+                "RecoverableErrorInterval": 5,
+                "ApplyErrorDeletePolicy": "IGNORE_RECORD",
+                "TableErrorEscalationCount": 0,
+                "FullLoadIgnoreConflicts": True,
+                "DataErrorPolicy": "LOG_ERROR",
+                "TableErrorPolicy": "SUSPEND_TABLE"
+            },
+            "TTSettings": None,
+            "FullLoadSettings": {
+                "CommitRate": 50000,
+                "StopTaskCachedChangesApplied": False,
+                "StopTaskCachedChangesNotApplied": False,
+                "MaxFullLoadSubTasks": 24,
+                "TransactionConsistencyTimeout": 2147483647,
+                "CreatePkAfterFullLoad": False,
+                "TargetTablePrepMode": "TRUNCATE_BEFORE_LOAD"
+            },
+            "TargetMetadata": {
+                "ParallelApplyBufferSize": 0,
+                "ParallelApplyQueuesPerThread": 0,
+                "ParallelApplyThreads": 0,
+                "TargetSchema": "",
+                "InlineLobMaxSize": 0,
+                "ParallelLoadQueuesPerThread": 0,
+                "SupportLobs": True,
+                "LobChunkSize": 0,
+                "TaskRecoveryTableEnabled": False,
+                "ParallelLoadThreads": 0,
+                "LobMaxSize": maxlob_calculated_value,
+                "BatchApplyEnabled": False,
+                "FullLobMode": False,
+                "LimitedSizeLobMode": True,
+                "LoadMaxFileSize": 0,
+                "ParallelLoadBufferSize": 0
+            },
+            "BeforeImageSettings": None,
+            "ControlTablesSettings": {
+                "HistoryTimeslotInMinutes": 5,
+                "StatusTableEnabled": False,
+                "SuspendedTablesTableEnabled": False,
+                "HistoryTableEnabled": False,
+                "ControlSchema": "",
+                "FullLoadExceptionTableEnabled": False
+            },
+            "LoopbackPreventionSettings": None,
+            "CharacterSetSettings": None,
+            "FailTaskWhenCleanTaskResourceFailed": False,
+            "ChangeProcessingTuning": {
+                "StatementCacheSize": 50,
+                "CommitTimeout": 1,
+                "RecoveryTimeout": -1,
+                "BatchApplyPreserveTransaction": True,
+                "BatchApplyTimeoutMin": 1,
+                "BatchSplitSize": 0,
+                "BatchApplyTimeoutMax": 30,
+                "MinTransactionSize": 1000,
+                "MemoryKeepTime": 60,
+                "BatchApplyMemoryLimit": 500,
+                "MemoryLimitTotal": 1024
+            },
+            "ChangeProcessingDdlHandlingPolicy": {
+                "HandleSourceTableDropped": True,
+                "HandleSourceTableTruncated": True,
+                "HandleSourceTableAltered": True
+            },
+            "PostProcessingRules": None
+        }
+    else:
+        settings = {
+            "Logging": {
+                "EnableLogging": False,
+                "EnableLogContext": False,
+                "LogComponents": [
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "TRANSFORMATION"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "SOURCE_UNLOAD"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "IO"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "TARGET_LOAD"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "PERFORMANCE"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "SOURCE_CAPTURE"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "SORTER"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "REST_SERVER"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "VALIDATOR_EXT"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "TARGET_APPLY"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "TASK_MANAGER"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "TABLES_MANAGER"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "METADATA_MANAGER"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "FILE_FACTORY"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "COMMON"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "ADDONS"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "DATA_STRUCTURE"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "COMMUNICATION"},
+                    {"Severity": "LOGGER_SEVERITY_DEFAULT", "Id": "FILE_TRANSFER"}
+                ],
+                "CloudWatchLogGroup": None,
+                "CloudWatchLogStream": None
+            },
+            "StreamBufferSettings": {
+                "StreamBufferCount": 3,
+                "CtrlStreamBufferSizeInMB": 5,
+                "StreamBufferSizeInMB": 8
+            },
+            "ErrorBehavior": {
+                "FailOnNoTablesCaptured": True,
+                "ApplyErrorUpdatePolicy": "LOG_ERROR",
+                "FailOnTransactionConsistencyBreached": False,
+                "RecoverableErrorThrottlingMax": 1800,
+                "DataErrorEscalationPolicy": "SUSPEND_TABLE",
+                "ApplyErrorEscalationCount": 0,
+                "RecoverableErrorStopRetryAfterThrottlingMax": True,
+                "RecoverableErrorThrottling": True,
+                "ApplyErrorFailOnTruncationDdl": False,
+                "DataMaskingErrorPolicy": "STOP_TASK",
+                "DataTruncationErrorPolicy": "LOG_ERROR",
+                "ApplyErrorInsertPolicy": "LOG_ERROR",
+                "EventErrorPolicy": "IGNORE",
+                "ApplyErrorEscalationPolicy": "LOG_ERROR",
+                "RecoverableErrorCount": -1,
+                "DataErrorEscalationCount": 0,
+                "TableErrorEscalationPolicy": "STOP_TASK",
+                "RecoverableErrorInterval": 5,
+                "ApplyErrorDeletePolicy": "IGNORE_RECORD",
+                "TableErrorEscalationCount": 0,
+                "FullLoadIgnoreConflicts": True,
+                "DataErrorPolicy": "LOG_ERROR",
+                "TableErrorPolicy": "SUSPEND_TABLE"
+            },
+            "TTSettings": None,
+            "FullLoadSettings": {
+                "CommitRate": 50000,
+                "StopTaskCachedChangesApplied": False,
+                "StopTaskCachedChangesNotApplied": False,
+                "MaxFullLoadSubTasks": 24,
+                "TransactionConsistencyTimeout": 2147483647,
+                "CreatePkAfterFullLoad": False,
+                "TargetTablePrepMode": "TRUNCATE_BEFORE_LOAD"
+            },
+            "TargetMetadata": {
+                "ParallelApplyBufferSize": 0,
+                "ParallelApplyQueuesPerThread": 0,
+                "ParallelApplyThreads": 0,
+                "TargetSchema": "",
+                "InlineLobMaxSize": 0,
+                "ParallelLoadQueuesPerThread": 0,
+                "SupportLobs": True,
+                "LobChunkSize": 0,
+                "TaskRecoveryTableEnabled": False,
+                "ParallelLoadThreads": 0,
+                "LobMaxSize": maxlob_calculated_value,
+                "BatchApplyEnabled": False,
+                "FullLobMode": False,
+                "LimitedSizeLobMode": True,
+                "LoadMaxFileSize": 0,
+                "ParallelLoadBufferSize": 0
+            },
+            "BeforeImageSettings": None,
+            "ControlTablesSettings": {
+                "HistoryTimeslotInMinutes": 5,
+                "StatusTableEnabled": False,
+                "SuspendedTablesTableEnabled": False,
+                "HistoryTableEnabled": False,
+                "ControlSchema": "",
+                "FullLoadExceptionTableEnabled": False
+            },
+            "LoopbackPreventionSettings": None,
+            "CharacterSetSettings": None,
+            "FailTaskWhenCleanTaskResourceFailed": False,
+            "ChangeProcessingTuning": {
+                "StatementCacheSize": 50,
+                "CommitTimeout": 1,
+                "RecoveryTimeout": -1,
+                "BatchApplyPreserveTransaction": True,
+                "BatchApplyTimeoutMin": 1,
+                "BatchSplitSize": 0,
+                "BatchApplyTimeoutMax": 30,
+                "MinTransactionSize": 1000,
+                "MemoryKeepTime": 60,
+                "BatchApplyMemoryLimit": 500,
+                "MemoryLimitTotal": 1024
+            },
+            "ChangeProcessingDdlHandlingPolicy": {
+                "HandleSourceTableDropped": True,
+                "HandleSourceTableTruncated": True,
+                "HandleSourceTableAltered": True
+            },
+            "PostProcessingRules": None
+        }
+
+
+    return settings
+
+
 # Function to generate the DMS JSON structure
 def table_json(schema_name = None, table_name = None, input_schema_name = None,table_category = None, schema_table_pairs = []):
     if table_category == "partition_table_json":
@@ -1014,11 +1258,62 @@ def generate_json_files(db_name, script_input, target_schema):
         with open(filename, 'w') as json_file:
             json.dump(dms_json, json_file, indent=4)
 
+    conn.close()
 
+def generate_dms_settings_files(db_name, script_input, func_category):
+    folders = ["general_dms_task_settings", "lob_dms_task_settings" ]
+    for folder in folders:
+        if not os.path.exists(folder + "/" + db_name):
+            os.makedirs(folder + "/" + db_name)
 
+    # Handle file or direct SQL input
+    if os.path.isfile(script_input):
+        with open(script_input, 'r') as script_file:
+            # script = script_file.read()
+            script = script_file.read().replace("{{db_name}}", db_name)
+            print(script)
+    else:
+        script = script_input
 
+    # Establish the database connection using the credentials
+    conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};" \
+               f"SERVER={mssql_connection['host']};" \
+               f"DATABASE={db_name};" \
+               f"UID={mssql_connection['user']};" \
+               f"PWD={mssql_connection['password']}"
+    conn = pyodbc.connect(conn_str)
+    cursor = conn.cursor()
+
+    # Execute the script
+    cursor.execute(script)
+
+    result = cursor.fetchone()
+
+    # Process the result
+    if result:
+        max_lob_size_kb = result[0]  # Get the first column value
+        calculated_value = max_lob_size_kb * 2
+        print(f"Original MaxLOBSizeKB: {max_lob_size_kb}")
+        print(f"Calculated Value (MaxLOBSizeKB * 2): {calculated_value}")
+    else:
+        print("No results found.")
+        calculated_value = 1
+
+    if func_category == "lob_table_json":
+        folder = "lob_dms_task_settings"
+        dms_settings_json = settings_json(func_category, str(calculated_value))
+        filename_2 = f"{folder}/{db_name}/dms_task_lob_settings.json"
+        with open(filename_2, 'w') as json_file_2:
+            json.dump(dms_settings_json, json_file_2, indent=4)
+    else:
+        folder = "general_dms_task_settings"
+        dms_settings_json = settings_json(func_category, str(calculated_value))
+        filename_2 = f"{folder}/{db_name}/dms_task_general_settings.json"
+        with open(filename_2, 'w') as json_file_2:
+            json.dump(dms_settings_json, json_file_2, indent=4)
 
     conn.close()
+
 
 
 if __name__ == "__main__":
@@ -1034,23 +1329,34 @@ if __name__ == "__main__":
     print(tablemappings)
 
     for db_name, details in databases_to_migrate.items():
+        # Generate a timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
         run_analyze_script(details["source_db"])
         #####generate_partition_table_json
+        settings_script_path = os.path.join(os.path.dirname(__file__), 'lob_maxsizekb.sql')
+        generate_dms_settings_files(db_name, settings_script_path, 'partition_table_json')
         json_script_path = os.path.join(os.path.dirname(__file__), 'partition_table_json')
         print(json_script_path)
         generate_json_files(db_name,json_script_path,details["target_schema"])
 
         #####generate_non_partition_table_json
+        settings_script_path = os.path.join(os.path.dirname(__file__), 'lob_maxsizekb.sql')
+        generate_dms_settings_files(db_name, settings_script_path, 'non_partition_table_json')
         json_script_path = os.path.join(os.path.dirname(__file__), 'non_partition_table_json')
         print(json_script_path)
         generate_json_files(db_name, json_script_path, details["target_schema"])
 
         #####generate_lob_table_json
+        settings_script_path = os.path.join(os.path.dirname(__file__), 'lob_maxsizekb.sql')
+        generate_dms_settings_files(db_name, settings_script_path, 'lob_table_json')
         json_script_path = os.path.join(os.path.dirname(__file__), 'lob_table_json')
         print(json_script_path)
         generate_json_files(db_name, json_script_path, details["target_schema"])
 
         #####generate_reaming_table_json
+        settings_script_path = os.path.join(os.path.dirname(__file__), 'lob_maxsizekb.sql')
+        generate_dms_settings_files(db_name, settings_script_path, 'remaining_table_json')
         json_script_path = os.path.join(os.path.dirname(__file__), 'remaining_table_json')
         print(json_script_path)
         generate_json_files(db_name, json_script_path, details["target_schema"])
