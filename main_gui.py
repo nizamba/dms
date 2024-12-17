@@ -653,7 +653,7 @@ def settings_json(table_category=None, maxlob_calculated_value = "1"):
                 "CommitRate": 50000,
                 "StopTaskCachedChangesApplied": False,
                 "StopTaskCachedChangesNotApplied": False,
-                "MaxFullLoadSubTasks": 24,
+                "MaxFullLoadSubTasks": 49,
                 "TransactionConsistencyTimeout": 2147483647,
                 "CreatePkAfterFullLoad": False,
                 "TargetTablePrepMode": "TRUNCATE_BEFORE_LOAD"
@@ -772,7 +772,7 @@ def settings_json(table_category=None, maxlob_calculated_value = "1"):
                 "CommitRate": 50000,
                 "StopTaskCachedChangesApplied": False,
                 "StopTaskCachedChangesNotApplied": False,
-                "MaxFullLoadSubTasks": 24,
+                "MaxFullLoadSubTasks": 49,
                 "TransactionConsistencyTimeout": 2147483647,
                 "CreatePkAfterFullLoad": False,
                 "TargetTablePrepMode": "TRUNCATE_BEFORE_LOAD"
@@ -930,7 +930,24 @@ def table_json(schema_name = None, table_name = None, input_schema_name = None,t
             ]
         }
     elif table_category == "lob_table_json":
-        return {
+        lob_remaining_tables_rules = []
+
+        for schema_name, table_name in schema_table_pairs:
+            lob_include_rule = {
+                    "rule-type": "selection",
+                    "rule-id": generate_rule_id(),
+                    "rule-name": generate_rule_id(),
+                    "object-locator": {
+                        "schema-name": schema_name,
+                        "table-name": table_name
+                    },
+                    "rule-action": "include"
+                }
+
+            lob_remaining_tables_rules.append(lob_include_rule)
+
+        # Add a single include rule for all remaining tables in the schema
+        lob_remaining_json = {
             "rules": [
                 {
                     "rule-type": "transformation",
@@ -969,11 +986,12 @@ def table_json(schema_name = None, table_name = None, input_schema_name = None,t
                     },
                     "rule-action": "include"
                 }
-            ]
+            ] + lob_remaining_tables_rules
         }
+
+        return lob_remaining_json
     else:
         remaining_tables_rules = []
-
         for schema_name, table_name in schema_table_pairs:
             # Add exclude rules for already allocated tables
             # for schema, table_name in allocated_tables:
@@ -1069,6 +1087,7 @@ def generate_json_files(db_name, script_input, target_schema):
     print("Number of tables fetched:", len(tables))
 
     allocated_tables = []
+    lob_allocated_tables = []
     # remaining_schemas = set()
     func_category = os.path.basename(script_input)
     for table in tables:
@@ -1080,19 +1099,20 @@ def generate_json_files(db_name, script_input, target_schema):
         if func_category == "remaining_table_json":
             # dms_json = table_json(table.SchemaName, table.TableName, target_schema, func_category)
             allocated_tables.append((table.SchemaName, table.TableName))
+        elif func_category == "lob_table_json":
+            lob_allocated_tables.append((table.SchemaName, table.TableName))
         else:
             dms_json = table_json(table.SchemaName, table.TableName, target_schema, func_category)
         folder = script_input
         filename = f"{folder}/{db_name}/dms_task_{table.SchemaName}_{table.TableName}.json"
 
-        if func_category != "remaining_table_json":
+        if func_category != "remaining_table_json" and func_category != "lob_table_json":
 
             # Write the JSON file for PartitionTables
             print(f"Creating JSON file: {filename}")
             with open(filename, 'w') as json_file:
                 json.dump(dms_json, json_file, indent=4)
 
-    print(allocated_tables)
     if func_category == "remaining_table_json" and allocated_tables is not None :
         dms_json = table_json(input_schema_name = target_schema, schema_table_pairs = allocated_tables)
         folder = script_input
@@ -1100,6 +1120,14 @@ def generate_json_files(db_name, script_input, target_schema):
         print(f"Creating JSON file: {filename}")
         with open(filename, 'w') as json_file:
             json.dump(dms_json, json_file, indent=4)
+    elif func_category == "lob_table_json" and lob_allocated_tables is not None :
+        lob_dms_json = table_json(input_schema_name = target_schema, table_category=func_category,schema_table_pairs=lob_allocated_tables)
+        folder = script_input
+        lob_filename = f"{folder}/{db_name}/dms_task_{table.SchemaName}_{table.TableName}.json"
+        print(f"Creating JSON file: {filename}")
+        with open(lob_filename, 'w') as lob_json_file:
+            json.dump(lob_dms_json, lob_json_file, indent=4)
+
 
     conn.close()
 def generate_dms_settings_files(db_name, script_input, func_category):
@@ -1157,6 +1185,8 @@ def generate_dms_settings_files(db_name, script_input, func_category):
     conn.close()
 
 if __name__ == "__main__":
+    current_dir = os.getcwd()
+
     # Loop over all Tables and verify source and destination app version match
     for db_name, details in databases_to_migrate.items():
         if details["product"] == "udm":
@@ -1181,11 +1211,11 @@ if __name__ == "__main__":
             report.append(f"{db_name}: Versions do not match (Source: {source_version[0][0]}), Target: {target_version[0][0]})")
             # print(f"{db_name}: Versions do not match (Source: {source_version}, Target: {target_version[0][0]})")
             version_status = False
-        print("\n".join(report))
-        if not version_status:
-            sys.exit("Stopping the application due to mismatched versions.")
-        else:
-            print("versions matched will continue migration process")
+    print("\n".join(report))
+    if not version_status:
+        sys.exit("Stopping the application due to mismatched versions.")
+    else:
+        print("versions matched will continue migration process")
 
     if dms_create:
         create_dms_replication_instance(dms_details["instance_identifier"], dms_details["instance_class"],dms_details["allocated_storage"], dms_details["subnet_group_name"], dms_details["VpcSecurityGroupIds"], dms_details["region"],dms_details["public_access"], db_name=None)
@@ -1196,7 +1226,6 @@ if __name__ == "__main__":
 
 
 
-    #
     for db_name, details in databases_to_migrate.items():
         # Generate a timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1211,7 +1240,7 @@ if __name__ == "__main__":
         disable_triggers_in_pg(details["target_schema"])
 
         ##### drop fks
-        # drop_fks_in_pg(details["target_schema"])
+        drop_fks_in_pg(details["target_schema"])
 
         #####generate_partition_table_json
         settings_script_path = os.path.join(os.path.dirname(__file__), 'lob_maxsizekb.sql')
@@ -1227,7 +1256,7 @@ if __name__ == "__main__":
         print(json_script_path)
         generate_json_files(db_name, json_script_path, details["target_schema"])
 
-        # #####generate_lob_table_json
+        #####generate_lob_table_json
         settings_script_path = os.path.join(os.path.dirname(__file__), 'lob_maxsizekb.sql')
         generate_dms_settings_files(db_name, settings_script_path, 'lob_table_json')
         json_script_path = os.path.join(os.path.dirname(__file__), 'lob_table_json')
@@ -1250,7 +1279,7 @@ if __name__ == "__main__":
                 if file.endswith(".json"):
                     file_path = os.path.join(root, file)
                     db_name = os.path.basename(os.path.dirname(file_path))  # Get parent directory name
-                    settings_file_path = os.path.join(root, "general_dms_task_settings", db_name, "dms_task_general_settings.json")
+                    settings_file_path = os.path.join(current_dir, "general_dms_task_settings", db_name, "dms_task_general_settings.json")
                     print(f"Processing JSON file: {file_path} | DB Name: {db_name}")
                     print(settings_file_path)
                     with open(file_path, 'r') as f:
@@ -1258,11 +1287,12 @@ if __name__ == "__main__":
                         # # Convert the dictionary to a JSON string
                         data_json = json.dumps(data)
                         # print(data)
-                    with open(file_path, 'r') as f:
+                    with open(settings_file_path, 'r') as f:
                         data_settings = json.load(f)
                         # # Convert the dictionary to a JSON string
                         data_settings_json = json.dumps(data_settings)
                     replicationtaskidentifier =  os.path.splitext(os.path.basename(file_path))[0]
                     print(replicationtaskidentifier)
                     replicationtaskidentifier = replicationtaskidentifier.replace("_", "-")
+                    print(data_settings_json)
                     create_dms_task(lower(replicationtaskidentifier), dms_details["SourceEndpointArn"],dms_details["TargetEndpointArn"], 'full-load', data_json, dms_details["instancearn"], data_settings_json, tags,databases_to_migrate[db_name]["source_db"], dms_details["region"])
