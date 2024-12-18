@@ -1,4 +1,6 @@
 -- Create a table to store the trigger enable/disable commands
+do $$
+begin
 CREATE TABLE target_schema_name.trigger_commands (
     disable_command text,
     enable_command text
@@ -11,3 +13,4 @@ SELECT
 FROM information_schema.triggers  
 WHERE event_object_schema='target_schema_name';
 SELECT * FROM target_schema_name.trigger_commands;
+end; $$
