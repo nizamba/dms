@@ -1,0 +1,1 @@
+SELECT add_command FROM target_schema_name.foreign_key_commands

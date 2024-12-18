@@ -17,4 +17,4 @@ SELECT TOP (1000) [ID]
       ,[TableSize]
       ,[Type]
       ,[Table_JSON]
-  FROM [{{db_name}}].[dbo].[ActMigListTables] where MaxLOBSizeKB > 1 or ([IsPartitioned] = 'Not Partitioned' and rows > 1000 or [IsPartitioned] = 'Partitioned' and rows > 10000000)
+  FROM [{{db_name}}].[dbo].[ActMigListTables] where MaxLOBSizeKB > 1 or ([IsPartitioned] = 'Not Partitioned' and rows > 10000000 or [IsPartitioned] = 'Partitioned' and rows > 10000000)
