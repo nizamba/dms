@@ -54,7 +54,7 @@ databases_to_migrate = {
         "source_db": "LIN_CDD_CDD_APP",
         "target_schema": "fuga01_cdd_app",
         "dms_instance_arn": "None",
-        "SourceEndpointArn": None,
+        "sourceendpointarn": None,
         "TargetEndpointArn": None,
         "product": "cdd_app"
     },
@@ -62,7 +62,7 @@ databases_to_migrate = {
         "source_db": "LIN_CDD_CDD_PRF",
         "target_schema": "fuga01_cdd_prf",
         "dms_instance_arn": "None",
-        "SourceEndpointArn": None,
+        "sourceendpointarn": None,
         "TargetEndpointArn": None,
         "product": "cdd_prf"
     },
@@ -70,7 +70,7 @@ databases_to_migrate = {
         "source_db": "UDM",
         "target_schema": "fuga01_udm_cds",
         "dms_instance_arn": "None",
-        "SourceEndpointArn": None,
+        "sourceendpointarn": None,
         "TargetEndpointArn": None,
         "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
     },
@@ -78,7 +78,7 @@ databases_to_migrate = {
         "source_db": "LIN_CDD_RCM",
         "target_schema": "fuga01_rcm",
         "dms_instance_arn": "None",
-        "SourceEndpointArn": None,
+        "sourceendpointarn": None,
         "TargetEndpointArn": None,
         "product": "rcm"
     }
@@ -281,9 +281,9 @@ def create_partition_alignment(db_name, is_postgres=True, schema_name=None):
                 activity_logger.warning(f"Failed to delete temporary script file: {temp_script_path}. Error: {str(e)}", exc_info=True)
 
     return None
-def disable_triggers_in_pg(db_name):
+def disable_triggers_in_pg(db_name, schema_name):
     try:
-        schema_name = db_name.lower()
+        # schema_name = db_name.lower()
 
         activity_logger.info(f"Processing disable triggers commands for schema {schema_name}...")
 
@@ -291,7 +291,7 @@ def disable_triggers_in_pg(db_name):
         check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
 
         # Execute the check script
-        schema_exists = execute_script_on_database(check_schema_script,databases_to_migrate["actdb"]["target_schema"], True, schema_name)
+        schema_exists = execute_script_on_database(check_schema_script,databases_to_migrate[db_name]["target_schema"], True, schema_name)
 
         if not schema_exists:
             activity_logger.error(f"Schema '{schema_name}' does not exist. Skipping disable triggers commands.")
@@ -323,16 +323,16 @@ def disable_triggers_in_pg(db_name):
         activity_logger.info(f"Triggers disabled for schema {schema_name}")
     except Exception as e:
         activity_logger.error(f"Error in disabling triggers for schema {schema_name}: {str(e)}")
-def drop_fks_in_pg(db_name):
+def drop_fks_in_pg(db_name, schema_name):
     try:
-        schema_name = db_name.lower()  # Convert the schema name to lowercase to avoid case mismatches
+        # schema_name = db_name.lower()  # Convert the schema name to lowercase to avoid case mismatches
         activity_logger.info(f"Processing drop foreign key commands for schema {schema_name}...")
 
         # Verify if the schema exists before proceeding
         check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
 
         # Execute the check script
-        schema_exists = execute_script_on_database(check_schema_script, databases_to_migrate["actdb"]["target_schema"],True, schema_name)
+        schema_exists = execute_script_on_database(check_schema_script, databases_to_migrate[db_name]["target_schema"],True, schema_name)
 
         if not schema_exists:
             activity_logger.info(f"Schema '{schema_name}' does not exist. Skipping drop foreign key commands.")
@@ -360,6 +360,174 @@ def drop_fks_in_pg(db_name):
 
         # Execute the script on the target PostgreSQL database
         execute_script_on_database(sql_script, "postgres", is_postgres=True, schema_name=schema_name)
+
+        activity_logger.info(f"Triggers disabled for schema {schema_name}")
+
+    except Exception as e:
+        activity_logger.info(f"Error in processing drop foreign keys for schema {schema_name}: {str(e)}")
+def change_partition_owner(db_name, schema_name):
+    try:
+        # schema_name = db_name.lower()  # Convert the schema name to lowercase to avoid case mismatches
+        activity_logger.info(f"Processing change ownership commands for schema {schema_name}...")
+
+        # Verify if the schema exists before proceeding
+        check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
+
+        # Execute the check script
+        schema_exists = execute_script_on_database(check_schema_script, databases_to_migrate[db_name]["source_db"],True, schema_name)
+
+        if not schema_exists:
+            activity_logger.info(f"Schema '{schema_name}' does not exist. Skipping drop foreign key commands.")
+            return
+
+        # Read the SQL template
+        sql_file_path = os.path.join(os.path.dirname(__file__), 'change_partition_ownership.sql')
+        try:
+            with open(sql_file_path, 'r') as file:
+                sql_template = file.read()
+        except FileNotFoundError:
+            activity_logger.error(f"SQL file not found: {sql_file_path}")
+            return
+
+        # Replace placeholder with actual schema name
+        sql_script = sql_template.replace('target_schema_name', schema_name)
+
+        # Save the SQL script for reference
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        debug_sql_file = f"{schema_name}_drop_fks_debug_{timestamp}.sql"
+        with open(debug_sql_file, 'w') as f:
+            f.write(sql_script)
+
+        activity_logger.info(f"SQL script saved to: {debug_sql_file}")
+
+        # Execute the script on the target PostgreSQL database
+        execute_script_on_database(sql_script, db_name, is_postgres=True, schema_name=schema_name)
+
+        activity_logger.info(f"Triggers disabled for schema {schema_name}")
+
+    except Exception as e:
+        activity_logger.info(f"Error in processing drop foreign keys for schema {schema_name}: {str(e)}")
+def enable_triggers(db_name, schema_name):
+    try:
+        # schema_name = db_name.lower()  # Convert the schema name to lowercase to avoid case mismatches
+        activity_logger.info(f"Processing change ownership commands for schema {schema_name}...")
+
+        # Verify if the schema exists before proceeding
+        check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
+
+        # Execute the check script
+        schema_exists = execute_script_on_database(check_schema_script, databases_to_migrate[db_name]["source_db"],True, schema_name)
+
+        if not schema_exists:
+            activity_logger.info(f"Schema '{schema_name}' does not exist. Skipping drop foreign key commands.")
+            return
+
+        # Read the SQL template
+        sql_file_path = os.path.join(os.path.dirname(__file__), 'enable_triggers_in_pg.sql')
+        try:
+            with open(sql_file_path, 'r') as file:
+                sql_template = file.read()
+        except FileNotFoundError:
+            activity_logger.error(f"SQL file not found: {sql_file_path}")
+            return
+
+        # Replace placeholder with actual schema name
+        sql_script = sql_template.replace('target_schema_name', schema_name)
+
+        # Save the SQL script for reference
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        debug_sql_file = f"{schema_name}_drop_fks_debug_{timestamp}.sql"
+        with open(debug_sql_file, 'w') as f:
+            f.write(sql_script)
+
+        activity_logger.info(f"SQL script saved to: {debug_sql_file}")
+
+        # Execute the script on the target PostgreSQL database
+        execute_script_on_database(sql_script, db_name, is_postgres=True, schema_name=schema_name)
+
+        activity_logger.info(f"Triggers disabled for schema {schema_name}")
+
+    except Exception as e:
+        activity_logger.info(f"Error in processing drop foreign keys for schema {schema_name}: {str(e)}")
+def recreate_fks(db_name, schema_name):
+    try:
+        # schema_name = db_name.lower()  # Convert the schema name to lowercase to avoid case mismatches
+        activity_logger.info(f"Processing change ownership commands for schema {schema_name}...")
+
+        # Verify if the schema exists before proceeding
+        check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
+
+        # Execute the check script
+        schema_exists = execute_script_on_database(check_schema_script, databases_to_migrate[db_name]["source_db"],True, schema_name)
+
+        if not schema_exists:
+            activity_logger.info(f"Schema '{schema_name}' does not exist. Skipping drop foreign key commands.")
+            return
+
+        # Read the SQL template
+        sql_file_path = os.path.join(os.path.dirname(__file__), 'recreate_foreign_keys_in_pg.sql')
+        try:
+            with open(sql_file_path, 'r') as file:
+                sql_template = file.read()
+        except FileNotFoundError:
+            activity_logger.error(f"SQL file not found: {sql_file_path}")
+            return
+
+        # Replace placeholder with actual schema name
+        sql_script = sql_template.replace('target_schema_name', schema_name)
+
+        # Save the SQL script for reference
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        debug_sql_file = f"{schema_name}_drop_fks_debug_{timestamp}.sql"
+        with open(debug_sql_file, 'w') as f:
+            f.write(sql_script)
+
+        activity_logger.info(f"SQL script saved to: {debug_sql_file}")
+
+        # Execute the script on the target PostgreSQL database
+        execute_script_on_database(sql_script, db_name, is_postgres=True, schema_name=schema_name)
+
+        activity_logger.info(f"Triggers disabled for schema {schema_name}")
+
+    except Exception as e:
+        activity_logger.info(f"Error in processing drop foreign keys for schema {schema_name}: {str(e)}")
+def update_statistics(db_name, schema_name):
+    try:
+        # schema_name = db_name.lower()  # Convert the schema name to lowercase to avoid case mismatches
+        activity_logger.info(f"Processing change ownership commands for schema {schema_name}...")
+
+        # Verify if the schema exists before proceeding
+        check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
+
+        # Execute the check script
+        schema_exists = execute_script_on_database(check_schema_script, databases_to_migrate[db_name]["source_db"],True, schema_name)
+
+        if not schema_exists:
+            activity_logger.info(f"Schema '{schema_name}' does not exist. Skipping drop foreign key commands.")
+            return
+
+        # Read the SQL template
+        sql_file_path = os.path.join(os.path.dirname(__file__), 'update_statistics.sql')
+        try:
+            with open(sql_file_path, 'r') as file:
+                sql_template = file.read()
+        except FileNotFoundError:
+            activity_logger.error(f"SQL file not found: {sql_file_path}")
+            return
+
+        # Replace placeholder with actual schema name
+        sql_script = sql_template.replace('target_schema_name', schema_name)
+
+        # Save the SQL script for reference
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        debug_sql_file = f"{schema_name}_drop_fks_debug_{timestamp}.sql"
+        with open(debug_sql_file, 'w') as f:
+            f.write(sql_script)
+
+        activity_logger.info(f"SQL script saved to: {debug_sql_file}")
+
+        # Execute the script on the target PostgreSQL database
+        execute_script_on_database(sql_script, db_name, is_postgres=True, schema_name=schema_name)
 
         activity_logger.info(f"Triggers disabled for schema {schema_name}")
 
@@ -463,7 +631,8 @@ def configure_dms_endpoints(endpointtype,enginename,servername,port,databasename
         arn_key = "TargetEndpointArn" if endpointtype == 'target' else "SourceEndpointArn"
         # databases_to_migrate[db_name][arn_key] = source_response['Endpoint']['EndpointArn']
         dms_details[arn_key] = source_response['Endpoint']['EndpointArn']
-
+        # databases_to_migrate[db_name][arn_key] = source_response['Endpoint']['EndpointArn']
+        return source_response['Endpoint']['EndpointArn']
     except Exception as e:
         activity_logger.error(f"Unexpected error: {str(e)}")
         sys.exit(1)
@@ -1116,7 +1285,7 @@ def generate_json_files(db_name, script_input, target_schema):
     if func_category == "remaining_table_json" and allocated_tables is not None :
         dms_json = table_json(input_schema_name = target_schema, schema_table_pairs = allocated_tables)
         folder = script_input
-        filename = f"{folder}/{db_name}/dms_task_{table.SchemaName}_{table.TableName}.json"
+        filename = f"{folder}/{db_name}/remaining_dms_task_{table.TableName}.json"
         print(f"Creating JSON file: {filename}")
         with open(filename, 'w') as json_file:
             json.dump(dms_json, json_file, indent=4)
@@ -1161,7 +1330,7 @@ def generate_dms_settings_files(db_name, script_input, func_category):
 
     # Process the result
     if result:
-        max_lob_size_kb = result[0]  # Get the first column value
+        max_lob_size_kb = int(result[0])  # Get the first column value
         calculated_value = max_lob_size_kb * 2
         print(f"Original MaxLOBSizeKB: {max_lob_size_kb}")
         print(f"Calculated Value (MaxLOBSizeKB * 2): {calculated_value}")
@@ -1171,7 +1340,7 @@ def generate_dms_settings_files(db_name, script_input, func_category):
 
     if func_category == "lob_table_json":
         folder = "lob_dms_task_settings"
-        dms_settings_json = settings_json(func_category, str(calculated_value))
+        dms_settings_json = settings_json(func_category, calculated_value)
         filename_2 = f"{folder}/{db_name}/dms_task_lob_settings.json"
         with open(filename_2, 'w') as json_file_2:
             json.dump(dms_settings_json, json_file_2, indent=4)
@@ -1219,16 +1388,17 @@ if __name__ == "__main__":
 
     if dms_create:
         create_dms_replication_instance(dms_details["instance_identifier"], dms_details["instance_class"],dms_details["allocated_storage"], dms_details["subnet_group_name"], dms_details["VpcSecurityGroupIds"], dms_details["region"],dms_details["public_access"], db_name=None)
-        configure_dms_endpoints('source', 'sqlserver', mssql_connection["host"], 1433, mssql_connection["database"], mssql_connection["user"], mssql_connection["password"], dms_details["region"])
+        # configure_dms_endpoints('source', 'sqlserver', mssql_connection["host"], 1433, mssql_connection["database"], mssql_connection["user"], mssql_connection["password"], dms_details["region"])
         configure_dms_endpoints('target', 'postgres', rds_postgres_connection["host"], 5432, rds_postgres_connection["database"], rds_postgres_connection["user"], rds_postgres_connection["password"], dms_details["region"])
         print(dms_details["TargetEndpointArn"])
-        print(dms_details["SourceEndpointArn"])
-
-
 
     for db_name, details in databases_to_migrate.items():
         # Generate a timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        details["sourceendpointarn"] = configure_dms_endpoints('source', 'sqlserver', mssql_connection["host"], 1433, details["source_db"], mssql_connection["user"], mssql_connection["password"], dms_details["region"])
+        print("source endpoint for DB " + db_name + " Is " + details["sourceendpointarn"])
+
 
         ##### run_analyze_script
         run_analyze_script(details["source_db"])
@@ -1237,10 +1407,16 @@ if __name__ == "__main__":
         create_partition_alignment(details["source_db"], False,details["target_schema"])
 
         ##### disable triggers
-        disable_triggers_in_pg(details["target_schema"])
+        disable_triggers_in_pg(db_name, details["target_schema"])
 
         ##### drop fks
-        drop_fks_in_pg(details["target_schema"])
+        drop_fks_in_pg(db_name, details["target_schema"])
+
+        #####
+        change_partition_owner(db_name, details["target_schema"])
+        enable_triggers(db_name, details["target_schema"])
+        recreate_fks(db_name, details["target_schema"])
+        update_statistics(db_name, details["target_schema"])
 
         #####generate_partition_table_json
         settings_script_path = os.path.join(os.path.dirname(__file__), 'lob_maxsizekb.sql')
@@ -1270,7 +1446,7 @@ if __name__ == "__main__":
         print(json_script_path)
         generate_json_files(db_name, json_script_path, details["target_schema"])
 
-    target_dirs = {"lob_table_json", "remaining_table_json"}
+    target_dirs = {"lob_table_json", "remaining_table_json", "partition_table_json", "non_partition_table_json"}
     base_directory = os.path.dirname(__file__)
     for root, dirs, files in os.walk(base_directory):
         # Check if any part of the current directory path matches a target directory name
@@ -1279,9 +1455,12 @@ if __name__ == "__main__":
                 if file.endswith(".json"):
                     file_path = os.path.join(root, file)
                     db_name = os.path.basename(os.path.dirname(file_path))  # Get parent directory name
-                    settings_file_path = os.path.join(current_dir, "general_dms_task_settings", db_name, "dms_task_general_settings.json")
-                    print(f"Processing JSON file: {file_path} | DB Name: {db_name}")
+                    if "lob_table_json" in file_path:
+                        settings_file_path = os.path.join(current_dir, "lob_dms_task_settings", db_name, "dms_task_lob_settings.json")
+                    else:
+                        settings_file_path = os.path.join(current_dir, "general_dms_task_settings", db_name, "dms_task_general_settings.json")
                     print(settings_file_path)
+                    print(f"Processing JSON file: {file_path} | DB Name: {db_name}")
                     with open(file_path, 'r') as f:
                         data = json.load(f)
                         # # Convert the dictionary to a JSON string
@@ -1291,8 +1470,12 @@ if __name__ == "__main__":
                         data_settings = json.load(f)
                         # # Convert the dictionary to a JSON string
                         data_settings_json = json.dumps(data_settings)
-                    replicationtaskidentifier =  os.path.splitext(os.path.basename(file_path))[0]
+                    base_replicationtaskidentifier =  os.path.splitext(os.path.basename(file_path))[0]
+
+                    base_replicationtaskidentifier = base_replicationtaskidentifier.replace("_", "-")
+                    # Prepend db_name to the replication task identifier
+                    replicationtaskidentifier = f"{db_name}_{base_replicationtaskidentifier}"
+                    replicationtaskidentifier =  replicationtaskidentifier.replace("_", "-")
                     print(replicationtaskidentifier)
-                    replicationtaskidentifier = replicationtaskidentifier.replace("_", "-")
                     print(data_settings_json)
-                    create_dms_task(lower(replicationtaskidentifier), dms_details["SourceEndpointArn"],dms_details["TargetEndpointArn"], 'full-load', data_json, dms_details["instancearn"], data_settings_json, tags,databases_to_migrate[db_name]["source_db"], dms_details["region"])
+                    create_dms_task(lower(replicationtaskidentifier), databases_to_migrate[db_name]["sourceendpointarn"],dms_details["TargetEndpointArn"], 'full-load', data_json, dms_details["instancearn"], data_settings_json, tags,databases_to_migrate[db_name]["source_db"], dms_details["region"])
