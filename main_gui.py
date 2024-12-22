@@ -185,9 +185,9 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
         # Save results to a file if any
         if results:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            if task == "drop_foreign_keys_in_pg":
+            if task == "drop_foreign_keys_in_pg" or task == "disable_triggers_in_pg":
                 print("Task Name is: " + task)
-                result_file = f"{task}.sql"
+                result_file = f"{task}_{db_name}_result.sql"
             else:
                 result_file = f"{schema_name if is_postgres else db_name}_script_results_{timestamp}.txt"
             with open(result_file, 'w') as f:
@@ -298,7 +298,7 @@ def disable_triggers_in_pg(db_name, schema_name):
         check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
 
         # Execute the check script
-        schema_exists = execute_script_on_database(check_schema_script,databases_to_migrate[db_name]["target_schema"], True, schema_name)
+        schema_exists = execute_script_on_database(script_input=check_schema_script,db_name=databases_to_migrate[db_name]["target_schema"], is_postgres=True, schema_name=schema_name)
 
         if not schema_exists:
             activity_logger.error(f"Schema '{schema_name}' does not exist. Skipping disable triggers commands.")
@@ -325,8 +325,14 @@ def disable_triggers_in_pg(db_name, schema_name):
         log_message = f"SQL script saved to: {debug_sql_file}"
 
         # Execute the script on the target PostgreSQL database
-        execute_script_on_database(sql_script,db_name, is_postgres=True, schema_name=schema_name)
-        execute_script_on_database(f'SELECT disable_command FROM {schema_name}.trigger_commands;', db_name, is_postgres=True, schema_name=schema_name)
+        task_name = os.path.basename(sql_file_path)  # Get 'drop_foreign_keys_in_pg.sql'
+        name_without_extension = os.path.splitext(task_name)[0]  # Remove '.sql'
+        execute_script_on_database(name_without_extension,sql_script,db_name, is_postgres=True, schema_name=schema_name)
+        execute_script_on_database(name_without_extension,f'SELECT disable_command FROM {schema_name}.trigger_commands;', db_name, is_postgres=True, schema_name=schema_name)
+
+        script_2 = f"{name_without_extension}_{db_name}_result.sql"
+        if os.path.exists(script_2):
+            print(f"will run {script_2}")
 
         activity_logger.info(f"Triggers disabled for schema {schema_name}")
     except Exception as e:
@@ -371,9 +377,11 @@ def drop_fks_in_pg(db_name, schema_name):
         name_without_extension = os.path.splitext(task_name)[0]  # Remove '.sql'
         execute_script_on_database(name_without_extension,sql_script, db_name, is_postgres=True, schema_name=schema_name)
         execute_script_on_database(name_without_extension,f'SELECT drop_command FROM {schema_name}.foreign_key_commands;', db_name, is_postgres=True, schema_name=schema_name)
-        script_2 = name_without_extension + ".sql"
-        # if name_without_extension == "drop_foreign_keys_in_pg":
-        #     execute_script_on_database(name_without_extension, script_2,db_name, is_postgres=True, schema_name=schema_name)
+        # script_2 = name_without_extension + ".sql"
+        script_2= f"{name_without_extension}_{db_name}_result.sql"
+        if os.path.exists(script_2):
+            print(f"will run {script_2}")
+            # execute_script_on_database(name_without_extension, script_2,db_name, is_postgres=True, schema_name=schema_name)
 
         activity_logger.info(f"Triggers disabled for schema {schema_name}")
 
@@ -1424,7 +1432,8 @@ if __name__ == "__main__":
     #     disable_triggers_in_pg(db_name, details["target_schema"])
     #
     #     ##### drop fks
-        drop_fks_in_pg(db_name, details["target_schema"])
+    #     drop_fks_in_pg(db_name, details["target_schema"])
+        disable_triggers_in_pg(db_name, details["target_schema"])
     #
     #     #####
     #     change_partition_owner(db_name, details["target_schema"])
