@@ -30,7 +30,7 @@ BEGIN
                 AND nsp.nspname = 'target_schema_name' -- Change target_schema_name as actual target_schema_name
                 AND child.relkind = 'r' -- Only include tables
         LOOP
-			EXECUTE format('ALTER TABLE %I.%I OWNER TO schema_name', 'target_schema_name', partition.partition_name); --Change target_schema_name as actual target_schema_name
+			EXECUTE format('ALTER TABLE %I.%I OWNER TO target_schema_name', 'target_schema_name', partition.partition_name); --Change target_schema_name as actual target_schema_name
             --RAISE NOTICE '-- ALTER TABLE %.% OWNER TO target_schema_name;', 'target_schema_name', partition.partition_name; --Change target_schema_name as actual target_schema_name
         END LOOP;
     END LOOP;

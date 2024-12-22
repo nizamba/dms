@@ -49,15 +49,15 @@ rds_postgres_connection = {
 
 # Dictionary to hold migration details for each database
 databases_to_migrate = {
-    "LIN_CDD_CDD_APP": {
-        # "source_db": "dbo.case_managment_versions",
-        "source_db": "LIN_CDD_CDD_APP",
-        "target_schema": "fuga01_cdd_app",
-        "dms_instance_arn": "None",
-        "sourceendpointarn": None,
-        "TargetEndpointArn": None,
-        "product": "cdd_app"
-    },
+    # "LIN_CDD_CDD_APP": {
+    #     # "source_db": "dbo.case_managment_versions",
+    #     "source_db": "LIN_CDD_CDD_APP",
+    #     "target_schema": "fuga01_cdd_app",
+    #     "dms_instance_arn": "None",
+    #     "sourceendpointarn": None,
+    #     "TargetEndpointArn": None,
+    #     "product": "cdd_app"
+    # },
     "LIN_CDD_CDD_PRF": {
         "source_db": "LIN_CDD_CDD_PRF",
         "target_schema": "fuga01_cdd_prf",
@@ -66,14 +66,14 @@ databases_to_migrate = {
         "TargetEndpointArn": None,
         "product": "cdd_prf"
     },
-    "UDM": {
-        "source_db": "UDM",
-        "target_schema": "fuga01_udm_cds",
-        "dms_instance_arn": "None",
-        "sourceendpointarn": None,
-        "TargetEndpointArn": None,
-        "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
-    },
+    # "UDM": {
+    #     "source_db": "UDM",
+    #     "target_schema": "fuga01_udm_cds",
+    #     "dms_instance_arn": "None",
+    #     "sourceendpointarn": None,
+    #     "TargetEndpointArn": None,
+    #     "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
+    # },
     "LIN_CDD_RCM": {
         "source_db": "LIN_CDD_RCM",
         "target_schema": "fuga01_rcm",
@@ -157,6 +157,7 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
                 password=rds_postgres_connection["password"]
             )
         else:
+            print(mssql_connection['host'] + db_name + mssql_connection['user'] + mssql_connection['password'])
             conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};" \
                        f"SERVER={mssql_connection['host']};" \
                        f"DATABASE={db_name};" \
@@ -185,7 +186,7 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
         # Save results to a file if any
         if results:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            if task == "drop_foreign_keys_in_pg" or task == "disable_triggers_in_pg" or task == "enable_triggers_in_pg" or task == "recreate_foreign_keys_in_pg":
+            if task == "drop_foreign_keys_in_pg" or task == "disable_triggers_in_pg" or task == "enable_triggers_in_pg" or task == "recreate_foreign_keys_in_pg" or task == "Partition_Alignment_General":
                 print("Task Name is: " + task)
                 result_file = f"{task}_{db_name}_result.sql"
             else:
@@ -217,7 +218,7 @@ def run_analyze_script(db_name, is_postgres=False, schema_name=None):
     except Exception as e:
         activity_logger.error(f"Failed to run analyze on {db_name}: {str(e)}")
         raise
-def create_partition_alignment(db_name, is_postgres=True, schema_name=None):
+def create_partition_alignment(db_name, schema_name=None, is_postgres=False):
     script_path = os.path.join(os.path.dirname(__file__), 'Partition_Alignment_General.sql')
     activity_logger.info(f"Creating partition alignment for {db_name}...")
     temp_script_path = None # Initialize script variable
@@ -243,9 +244,19 @@ def create_partition_alignment(db_name, is_postgres=True, schema_name=None):
         with open(temp_script_path, 'w') as temp_file:
             temp_file.write(sql_script)
 
+        print(temp_script_path)
+
         # Execute the modified script
-        result_file = execute_script_on_database(temp_script_path,db_name,is_postgres, schema_name)  # True for source database
+        task_name = os.path.basename(script_path)  # Get 'drop_foreign_keys_in_pg.sql'
+        name_without_extension = os.path.splitext(task_name)[0]  # Remove '.sql'
+        result_file = execute_script_on_database(name_without_extension, temp_script_path,db_name,is_postgres, schema_name)  # True for source database
         print(result_file)
+
+
+        script_2 = f"{name_without_extension}_{db_name}_result.sql"
+        if os.path.exists(script_2):
+            execute_script_on_database(name_without_extension,script_2, db_name,is_postgres=True, schema_name=schema_name)
+            # print(f"will run {script_2}")
 
         #Remove the temporary file
         os.remove(temp_script_path)
@@ -398,7 +409,7 @@ def change_partition_owner(db_name, schema_name):
         check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
 
         # Execute the check script
-        schema_exists = execute_script_on_database(check_schema_script, databases_to_migrate[db_name]["source_db"],True, schema_name)
+        schema_exists = execute_script_on_database(script_input=check_schema_script, db_name=databases_to_migrate[db_name]["source_db"],is_postgres=True, schema_name=schema_name)
 
         if not schema_exists:
             activity_logger.info(f"Schema '{schema_name}' does not exist. Skipping drop foreign key commands.")
@@ -425,7 +436,7 @@ def change_partition_owner(db_name, schema_name):
         activity_logger.info(f"SQL script saved to: {debug_sql_file}")
 
         # Execute the script on the target PostgreSQL database
-        execute_script_on_database(sql_script, db_name, is_postgres=True, schema_name=schema_name)
+        execute_script_on_database(script_input=sql_script, db_name=db_name, is_postgres=True, schema_name=schema_name)
 
         activity_logger.info(f"Triggers disabled for schema {schema_name}")
 
@@ -539,7 +550,7 @@ def update_statistics(db_name, schema_name):
         check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
 
         # Execute the check script
-        schema_exists = execute_script_on_database(check_schema_script, databases_to_migrate[db_name]["source_db"],True, schema_name)
+        schema_exists = execute_script_on_database(script_input=check_schema_script, db_name=databases_to_migrate[db_name]["source_db"],is_postgres=True, schema_name=schema_name)
 
         if not schema_exists:
             activity_logger.info(f"Schema '{schema_name}' does not exist. Skipping drop foreign key commands.")
@@ -558,17 +569,15 @@ def update_statistics(db_name, schema_name):
         sql_script = sql_template.replace('target_schema_name', schema_name)
 
         # Save the SQL script for reference
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        debug_sql_file = f"{schema_name}_drop_fks_debug_{timestamp}.sql"
-        with open(debug_sql_file, 'w') as f:
-            f.write(sql_script)
+        # with open(debug_sql_file, 'w') as f:
+        #     f.write(sql_script)
 
-        activity_logger.info(f"SQL script saved to: {debug_sql_file}")
+        # activity_logger.info(f"SQL script saved to: {debug_sql_file}")
 
         # Execute the script on the target PostgreSQL database
-        execute_script_on_database(sql_script, db_name, is_postgres=True, schema_name=schema_name)
+        execute_script_on_database(script_input=sql_script, db_name=db_name, is_postgres=True, schema_name=schema_name)
 
-        activity_logger.info(f"Triggers disabled for schema {schema_name}")
+        # activity_logger.info(f"Triggers disabled for schema {schema_name}")
 
     except Exception as e:
         activity_logger.info(f"Error in processing drop foreign keys for schema {schema_name}: {str(e)}")
@@ -1452,7 +1461,12 @@ if __name__ == "__main__":
     #     drop_fks_in_pg(db_name, details["target_schema"])
     #     disable_triggers_in_pg(db_name, details["target_schema"])
     #     enable_triggers(db_name, details["target_schema"])
-        recreate_fks(db_name, details["target_schema"])
+    #     recreate_fks(db_name, details["target_schema"])
+    #     print("db_name is: " + db_name)
+    #     print("target schema is: " + details["target_schema"])
+    #     create_partition_alignment(db_name, details["target_schema"], is_postgres=False)
+    #     change_partition_owner(db_name, details["target_schema"])
+        update_statistics(db_name, details["target_schema"])
     #
     #     #####
     #     change_partition_owner(db_name, details["target_schema"])

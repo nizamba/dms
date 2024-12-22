@@ -16,11 +16,11 @@ BEGIN
         FROM pg_class c
         JOIN pg_namespace n ON c.relnamespace = n.oid
         LEFT JOIN pg_inherits i ON c.oid = i.inhrelid
-        WHERE n.nspname = target_schema_name
+        WHERE n.nspname = 'target_schema_name'
         AND i.inhrelid IS NULL
         AND c.relkind = 'r'
     )  
     LOOP  
-        EXECUTE 'ANALYZE ' || quote_ident(target_schema_name) || '.' || quote_ident(table_name);  
+        EXECUTE 'ANALYZE ' || quote_ident('target_schema_name') || '.' || quote_ident(table_name);
     END LOOP;  
 END $$;

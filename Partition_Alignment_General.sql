@@ -15,7 +15,7 @@ CREATE TABLE #PartitionDefinitions (
     PartitionType NVARCHAR(50) CHECK (PartitionType IN ('LIST', 'RANGE')) NOT NULL
 );
 INSERT INTO #PartitionDefinitions (TableName,PartitionType)
-VALUES	('DB_QUEUE_PART','RANGE'),('SamplePartitionedTable','RANGE');
+VALUES	('partition_test','RANGE');
 
 IF CURSOR_STATUS('global', 'partition_cursor') <> -3
 BEGIN
