@@ -49,15 +49,15 @@ rds_postgres_connection = {
 
 # Dictionary to hold migration details for each database
 databases_to_migrate = {
-    # "LIN_CDD_CDD_APP": {
-    #     # "source_db": "dbo.case_managment_versions",
-    #     "source_db": "LIN_CDD_CDD_APP",
-    #     "target_schema": "fuga01_cdd_app",
-    #     "dms_instance_arn": "None",
-    #     "sourceendpointarn": None,
-    #     "TargetEndpointArn": None,
-    #     "product": "cdd_app"
-    # },
+    "LIN_CDD_CDD_APP": {
+        # "source_db": "dbo.case_managment_versions",
+        "source_db": "LIN_CDD_CDD_APP",
+        "target_schema": "fuga01_cdd_app",
+        "dms_instance_arn": "None",
+        "sourceendpointarn": None,
+        "TargetEndpointArn": None,
+        "product": "cdd_app"
+    },
     "LIN_CDD_CDD_PRF": {
         "source_db": "LIN_CDD_CDD_PRF",
         "target_schema": "fuga01_cdd_prf",
@@ -136,6 +136,54 @@ activity_logger.addHandler(activity_handler)
 # Test the logger
 activity_logger.info("Logging initialized.")
 
+def align_db_sequence(db_name, schema_name):
+    try:
+        # schema_name = db_name.lower()
+        activity_logger.info(f"Align database sequence for schema {schema_name}...")
+
+        # Verify if the schema exists before proceeding
+        check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
+
+        # Execute the check script
+        schema_exists = execute_script_on_database(script_input=check_schema_script,db_name=databases_to_migrate[db_name]["target_schema"], is_postgres=True, schema_name=schema_name)
+
+        if not schema_exists:
+            activity_logger.error(f"Schema '{schema_name}' does not exist. Skipping disable triggers commands.")
+            return
+
+        # Read the SQL template for disabling triggers
+        if databases_to_migrate[db_name]["product"] == "cdd_prf":
+            sql_file_path = os.path.join(os.path.dirname(__file__), 'CDD_PRF_Align_database_sequences.sql')
+        elif  databases_to_migrate[db_name]["product"] == "cdd_app":
+            sql_file_path = os.path.join(os.path.dirname(__file__), 'CDD_APP_Align_database_sequences.sql')
+        # else:
+        #     sql_file_path = os.path.join(os.path.dirname(__file__), 'CDD_APP_Align_database_sequences.sql')
+
+        try:
+            with open(sql_file_path, 'r') as file:
+                sql_template = file.read()
+        except FileNotFoundError:
+            activity_logger.error(f"SQL file not found: {sql_file_path}")
+            return
+
+        # Replace placeholder with actual schema name
+        sql_script = sql_template.replace('target_schema_name', schema_name)
+
+        # Execute the script on the target PostgreSQL database
+        task_name = os.path.basename(sql_file_path)  # Get 'drop_foreign_keys_in_pg.sql'
+        name_without_extension = os.path.splitext(task_name)[0]  # Remove '.sql'
+        execute_script_on_database(name_without_extension,sql_script,db_name, is_postgres=False, schema_name=schema_name)
+        # execute_script_on_database(name_without_extension,f'SELECT disable_command FROM {schema_name}.trigger_commands;', db_name, is_postgres=True, schema_name=schema_name)
+
+        script_2 = f"{name_without_extension}_{db_name}_result.sql"
+        if os.path.exists(script_2):
+            execute_script_on_database(name_without_extension,script_2, db_name,is_postgres=True, schema_name=schema_name)
+            # print(f"will run {script_2}")
+
+        activity_logger.info(f"align sequence for schema {schema_name}")
+    except Exception as e:
+        activity_logger.error(f"Error in align sequence for schema {schema_name}: {str(e)}")
+
 def execute_script_on_database(task=None, script_input=None, db_name=None,is_postgres=False, schema_name=None):
     try:
         # Handle file or direct SQL input
@@ -186,7 +234,15 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
         # Save results to a file if any
         if results:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            if task == "drop_foreign_keys_in_pg" or task == "disable_triggers_in_pg" or task == "enable_triggers_in_pg" or task == "recreate_foreign_keys_in_pg" or task == "Partition_Alignment_General":
+            if task in (
+                    "drop_foreign_keys_in_pg",
+                    "disable_triggers_in_pg",
+                    "enable_triggers_in_pg",
+                    "recreate_foreign_keys_in_pg",
+                    "Partition_Alignment_General",
+                    "CDD_APP_Align_database_sequences",
+                    "CDD_APP_Align_database_sequences"
+            ):
                 print("Task Name is: " + task)
                 result_file = f"{task}_{db_name}_result.sql"
             else:
@@ -219,7 +275,10 @@ def run_analyze_script(db_name, is_postgres=False, schema_name=None):
         activity_logger.error(f"Failed to run analyze on {db_name}: {str(e)}")
         raise
 def create_partition_alignment(db_name, schema_name=None, is_postgres=False):
-    script_path = os.path.join(os.path.dirname(__file__), 'Partition_Alignment_General.sql')
+    if databases_to_migrate[db_name]["product"]  == "cdd_prf":
+        script_path = os.path.join(os.path.dirname(__file__), 'Partition_Alignment_General.sql')
+    else:
+        script_path = os.path.join(os.path.dirname(__file__), 'Partition_Alignment_General.sql')
     activity_logger.info(f"Creating partition alignment for {db_name}...")
     temp_script_path = None # Initialize script variable
 
@@ -1466,7 +1525,8 @@ if __name__ == "__main__":
     #     print("target schema is: " + details["target_schema"])
     #     create_partition_alignment(db_name, details["target_schema"], is_postgres=False)
     #     change_partition_owner(db_name, details["target_schema"])
-        update_statistics(db_name, details["target_schema"])
+    #     update_statistics(db_name, details["target_schema"])
+        align_db_sequence(db_name, details["target_schema"])
     #
     #     #####
     #     change_partition_owner(db_name, details["target_schema"])
