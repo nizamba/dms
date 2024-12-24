@@ -136,6 +136,69 @@ activity_logger.addHandler(activity_handler)
 # Test the logger
 activity_logger.info("Logging initialized.")
 
+def data_compare(db_name, schema_name):
+    try:
+        # schema_name = db_name.lower()
+        activity_logger.info(f"Align database sequence for schema {schema_name}...")
+
+        # Verify if the schema exists before proceeding
+        check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
+
+        # Execute the check script
+        schema_exists = execute_script_on_database(script_input=check_schema_script,db_name=databases_to_migrate[db_name]["target_schema"], is_postgres=True, schema_name=schema_name)
+
+        if not schema_exists:
+            activity_logger.error(f"Schema '{schema_name}' does not exist. Skipping disable triggers commands.")
+            return
+
+        # Read the SQL template for disabling triggers
+        sql_file_path = os.path.join(os.path.dirname(__file__), 'PostgreSQL_compare_data.sql')
+
+        try:
+            with open(sql_file_path, 'r') as file:
+                sql_template = file.read()
+        except FileNotFoundError:
+            activity_logger.error(f"SQL file not found: {sql_file_path}")
+            return
+
+        # Replace placeholder with actual schema name
+        sql_script = sql_template.replace('target_schema_name', schema_name)
+
+        # Execute the script on the target PostgreSQL database
+        task_name = os.path.basename(sql_file_path)  # Get 'drop_foreign_keys_in_pg.sql'
+        name_without_extension = os.path.splitext(task_name)[0]  # Remove '.sql'
+        execute_script_on_database(name_without_extension,sql_script,db_name, is_postgres=True, schema_name=schema_name)
+        source_pg_file =  f"{name_without_extension}_{db_name}_result.sql" # PostgreSQL script output file
+        target_sql_file = f"MSSQL_data_compare_based_of_PostgreSQL.sql" # Target SQL file for MSSQL
+        sql_name_without_extension = os.path.splitext(target_sql_file)[0]
+        output_sql_file = f"sql_compare_{db_name}_result.sql"
+
+        #Read the PostgreSQL output file content
+        with open(source_pg_file, 'r') as pg_data:
+            pg_content = pg_data.read()
+
+        #Read the target SQL file content
+        with open(target_sql_file, 'r') as sql_data:
+            target_content = sql_data.read()
+
+        #Replace the placeholder 'PostgreSQL_compare_data' with the PostgreSQL content
+        updated_content = target_content.replace('PostgreSQL_compare_data', pg_content)
+
+        #Write the updated content to file
+        with open(output_sql_file, 'w') as output_file:
+            output_file.write(updated_content)
+
+        print("Replacement completed!")
+
+        script_2 = output_sql_file
+        if os.path.exists(script_2):
+        # #     execute_script_on_database(sql_name_without_extension,script_2, db_name,is_postgres=True, schema_name=schema_name)
+            print(f"will run {script_2}")
+
+        activity_logger.info(f"align sequence for schema {schema_name}")
+    except Exception as e:
+        activity_logger.error(f"Error in align sequence for schema {schema_name}: {str(e)}")
+
 def align_db_sequence(db_name, schema_name):
     try:
         # schema_name = db_name.lower()
@@ -183,7 +246,6 @@ def align_db_sequence(db_name, schema_name):
         activity_logger.info(f"align sequence for schema {schema_name}")
     except Exception as e:
         activity_logger.error(f"Error in align sequence for schema {schema_name}: {str(e)}")
-
 def execute_script_on_database(task=None, script_input=None, db_name=None,is_postgres=False, schema_name=None):
     try:
         # Handle file or direct SQL input
@@ -241,7 +303,8 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
                     "recreate_foreign_keys_in_pg",
                     "Partition_Alignment_General",
                     "CDD_APP_Align_database_sequences",
-                    "CDD_APP_Align_database_sequences"
+                    "CDD_APP_Align_database_sequences",
+                    "PostgreSQL_compare_data"
             ):
                 print("Task Name is: " + task)
                 result_file = f"{task}_{db_name}_result.sql"
@@ -249,7 +312,7 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
                 result_file = f"{schema_name if is_postgres else db_name}_script_results_{timestamp}.txt"
             with open(result_file, 'w') as f:
                 for row in results:
-                    print(row)
+                    print(row[0])
                     f.write(str(row[0]) + '\n')
             activity_logger.info(f"Results saved to: {result_file}")
             return result_file
@@ -1526,7 +1589,8 @@ if __name__ == "__main__":
     #     create_partition_alignment(db_name, details["target_schema"], is_postgres=False)
     #     change_partition_owner(db_name, details["target_schema"])
     #     update_statistics(db_name, details["target_schema"])
-        align_db_sequence(db_name, details["target_schema"])
+    #     align_db_sequence(db_name, details["target_schema"])
+        data_compare(db_name, details["target_schema"])
     #
     #     #####
     #     change_partition_owner(db_name, details["target_schema"])
