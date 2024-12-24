@@ -171,7 +171,7 @@ def data_compare(db_name, schema_name):
         source_pg_file =  f"{name_without_extension}_{db_name}_result.sql" # PostgreSQL script output file
         target_sql_file = f"MSSQL_data_compare_based_of_PostgreSQL.sql" # Target SQL file for MSSQL
         sql_name_without_extension = os.path.splitext(target_sql_file)[0]
-        output_sql_file = f"sql_compare_{db_name}_result.sql"
+        output_sql_file = f"MSSQL_compare_{db_name}_result.sql"
 
         #Read the PostgreSQL output file content
         with open(source_pg_file, 'r') as pg_data:
