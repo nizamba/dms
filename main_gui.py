@@ -8,6 +8,7 @@ import logging
 import random
 import pyodbc
 import psycopg2
+from psycopg2 import sql
 import ast
 import sqlite3
 import re
@@ -17,7 +18,7 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from tkinter import ttk, messagebox, simpledialog
 from contextlib import closing
-from ansible_collections.community.general.plugins.modules.postgresql_db import db_matches
+# import ansible_collections.community.general.plugins.modules.postgresql_db
 from iniparse.ini import lower
 
 from database_utils import get_databases, get_pg_databases, get_pg_schemas
@@ -292,14 +293,14 @@ def align_db_sequence(db_name, schema_name):
         if not schema_exists:
             activity_logger.error(f"Schema '{schema_name}' does not exist. Skipping disable triggers commands.")
             return
-
+        sql_file_path = ""
         # Read the SQL template for disabling triggers
         if databases_to_migrate[db_name]["product"] == "cdd_prf":
             sql_file_path = os.path.join(os.path.dirname(__file__), 'CDD_PRF_Align_database_sequences.sql')
         elif  databases_to_migrate[db_name]["product"] == "cdd_app":
-            sql_file_path = os.path.join(os.path.dirname(__file__), 'CDD_APP_Align_database_sequences.sql')
+            sql_file_path = os.path.join(os.path.dirname(__file__), 'CDD_APP_Align_database_add')
         else:
-            sql_file_path = os.path.join(os.path.dirname(__file__), 'CDD_APP_Align_database_sequences.sql')
+            return
 
         try:
             with open(sql_file_path, 'r') as file:

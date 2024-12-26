@@ -1,6 +1,6 @@
 SELECT
 	'SELECT setval ('''+
-	'<CDD_PRF_SCHEMA>.' +
+	'target_schema_name.' +
 	case
       when (t.name = 'CDD_PRF_PARTY_AUDIT') then 'seq_cdd_prf_party_audit'
       when (t.name = 'CDD_PRF_QA_PARTY_COMMENT') then 'seq_cdd_prf_qa_party_comment'

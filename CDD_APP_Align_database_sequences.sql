@@ -1,6 +1,6 @@
 SELECT
 	'SELECT setval ('''+
-	'<CDD_APP_SCHEMA>.' +
+	'target_schema_name.' +
 	case
 	when (t.name = 'CDD_APP_RISK_LEVELS') then 'cdd_app_seq_risk_levels'
 	when (t.name = 'ACTIONS_QUEUE') then 'seq_actions_queue'
