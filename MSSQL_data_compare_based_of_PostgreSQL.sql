@@ -4,6 +4,9 @@
 IF OBJECT_ID('tempdb..#TempTable') IS NOT NULL
     DROP TABLE #TempTable;
 
+IF OBJECT_ID('dbo.data_compare') IS NOT NULL
+DROP TABLE dbo.data_compare
+
 CREATE TABLE #TempTable (
     table_schema NVARCHAR(255),
     table_name NVARCHAR(255),
@@ -25,6 +28,7 @@ SELECT DISTINCT
         WHEN t1.row_count = t2.rows THEN 'Match'
         ELSE 'Mismatch'
     END AS ComparisonResult
+    into dbo.data_compare
 FROM
     #TempTable t1
 LEFT JOIN

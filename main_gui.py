@@ -58,32 +58,31 @@ databases_to_migrate = {
         "sourceendpointarn": None,
         "TargetEndpointArn": None,
         "product": "cdd_app"
-    }
-    # ,
-    # "LIN_CDD_CDD_PRF": {
-    #     "source_db": "LIN_CDD_CDD_PRF",
-    #     "target_schema": "fuga01_cdd_prf",
+    },
+    "LIN_CDD_CDD_PRF": {
+        "source_db": "LIN_CDD_CDD_PRF",
+        "target_schema": "fuga01_cdd_prf",
+        "dms_instance_arn": "None",
+        "sourceendpointarn": None,
+        "TargetEndpointArn": None,
+        "product": "cdd_prf"
+    },
+    # "UDM": {
+    #     "source_db": "UDM",
+    #     "target_schema": "fuga01_udm_cds",
     #     "dms_instance_arn": "None",
     #     "sourceendpointarn": None,
     #     "TargetEndpointArn": None,
-    #     "product": "cdd_prf"
+    #     "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
     # },
-    # # "UDM": {
-    # #     "source_db": "UDM",
-    # #     "target_schema": "fuga01_udm_cds",
-    # #     "dms_instance_arn": "None",
-    # #     "sourceendpointarn": None,
-    # #     "TargetEndpointArn": None,
-    # #     "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
-    # # },
-    # "LIN_CDD_RCM": {
-    #     "source_db": "LIN_CDD_RCM",
-    #     "target_schema": "fuga01_rcm",
-    #     "dms_instance_arn": "None",
-    #     "sourceendpointarn": None,
-    #     "TargetEndpointArn": None,
-    #     "product": "rcm"
-    # }
+    "LIN_CDD_RCM": {
+        "source_db": "LIN_CDD_RCM",
+        "target_schema": "fuga01_rcm",
+        "dms_instance_arn": "None",
+        "sourceendpointarn": None,
+        "TargetEndpointArn": None,
+        "product": "rcm"
+    }
     # Add more databases as needed
 }
 
@@ -169,6 +168,10 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
             conn = pyodbc.connect(conn_str)
 
         cursor = conn.cursor()
+        if not is_postgres:
+            print("connection string is ")
+            print(conn_str)
+            print(script)
 
         # Execute the script
         cursor.execute(script)
