@@ -221,74 +221,67 @@ def data_compare(db_name, schema_name):
         check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
 
         # Execute the check script
-        schema_exists = execute_script_on_database(script_input=check_schema_script,db_name=databases_to_migrate[db_name]["target_schema"], is_postgres=True, schema_name=schema_name)
+        schema_exists = execute_script_on_database(script_input=check_schema_script,
+                                                   db_name=databases_to_migrate[db_name]["target_schema"],
+                                                   is_postgres=True, schema_name=schema_name)
 
         if not schema_exists:
             activity_logger.error(f"Schema '{schema_name}' does not exist. Skipping disable triggers commands.")
             return
 
         # Read the SQL template for disabling triggers
-        sql_file_path = os.path.join(os.path.dirname(__file__), 'PostgreSQL_compare_data.sql')
+        pg_file_path = os.path.join(os.path.dirname(__file__), 'PostgreSQL_compare_data.sql')
         try:
-            with open(sql_file_path, 'r') as file:
-                sql_template = file.read()
+            with open(pg_file_path, 'r') as file:
+                pg_template = file.read()
         except FileNotFoundError:
-            activity_logger.error(f"SQL file not found: {sql_file_path}")
+            activity_logger.error(f"PostgreSQL file not found: {pg_file_path}")
             return
 
         # Replace placeholder with actual schema name
-        sql_script = sql_template.replace('target_schema_name', schema_name)
+        pg_script = pg_template.replace('target_schema_name', schema_name)
 
         # Execute the script on the target PostgreSQL database
-        task_name = os.path.basename(sql_file_path)  # Get 'drop_foreign_keys_in_pg.sql'
+        task_name = os.path.basename(pg_file_path)
         name_without_extension = os.path.splitext(task_name)[0]  # Remove '.sql'
-        execute_script_on_database(task=name_without_extension,script_input=sql_script,db_name=db_name, is_postgres=True, schema_name=schema_name)
-        source_pg_file =  f"{name_without_extension}_{db_name}_result.sql" # PostgreSQL script output file
-        target_sql_file = f"MSSQL_data_compare_based_of_PostgreSQL.sql" # Target SQL file for MSSQL
+        execute_script_on_database(task=name_without_extension, script_input=pg_script, db_name=db_name,
+                                   is_postgres=True, schema_name=schema_name)
+        source_pg_file = f"{name_without_extension}_{db_name}_result.sql"  # PostgreSQL script output file
+        target_sql_file = f"MSSQL_data_compare_based_of_PostgreSQL.sql"  # Target SQL file for MSSQL
         # sql_name_without_extension = os.path.splitext(target_sql_file)[0]
         output_sql_file = f"MSSQL_compare_{db_name}_result.sql"
         sql_name_without_extension = os.path.splitext(output_sql_file)[0]
 
-        #Read the PostgreSQL output file content
+        # Read the PostgreSQL output file content
         with open(source_pg_file, 'r') as pg_data:
             pg_content = pg_data.read()
 
-        #Read the target SQL file content
+        # Read the target SQL file content
         with open(target_sql_file, 'r') as sql_data:
             target_content = sql_data.read()
 
-        #Replace the placeholder 'PostgreSQL_compare_data' with the PostgreSQL content
+        # Replace the placeholder 'PostgreSQL_compare_data' with the PostgreSQL content
         updated_content = target_content.replace('PostgreSQL_compare_data', pg_content)
 
-        #Write the updated content to file
+        # Write the updated content to file
         with open(output_sql_file, 'w') as output_file:
             output_file.write(updated_content)
 
         print("Replacement completed!")
 
-
-
-        script_2 = os.path.join(os.path.dirname(__file__),f"MSSQL_compare_{db_name}_result.sql")
-        script_3 = script_2.replace('db_name', db_name)
-        print(script_3)
+        script_2 = os.path.join(os.path.dirname(__file__), f"MSSQL_compare_{db_name}_result.sql")
         try:
-            with open(script_3, 'r') as file:
+            with open(script_2, 'r') as file:
                 sql_template_1 = file.read()
         except FileNotFoundError:
             activity_logger.error(f"SQL file not found: {script_2}")
             return
 
-
         if os.path.exists(script_2):
-            print("Script 2 Task is " + sql_name_without_extension)
-            execute_script_on_database(task=sql_name_without_extension,script_input=sql_template_1,db_name= db_name,is_postgres=False, schema_name=schema_name)
-            print(f"Finish run {script_2}")
-        # script_2 = output_sql_file
-        # if os.path.exists(script_2):
-        # # #     execute_script_on_database(sql_name_without_extension,script_2, db_name,is_postgres=True, schema_name=schema_name)
-        #     print(f"will run {script_2}")
-
+            execute_script_on_database(task=sql_name_without_extension, script_input=sql_template_1, db_name=db_name,
+                                       is_postgres=False, schema_name=schema_name)
         activity_logger.info(f"Data Compare")
+
     except Exception as e:
         activity_logger.error(f"Data Compare: {str(e)}")
 def align_db_sequence(db_name, schema_name):
