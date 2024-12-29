@@ -20,13 +20,13 @@ from tkinter import ttk, messagebox, simpledialog
 from contextlib import closing
 # import ansible_collections.community.general.plugins.modules.postgresql_db
 from iniparse.ini import lower
-
 from database_utils import get_databases, get_pg_databases, get_pg_schemas
 from botocore.exceptions import BotoCoreError, ClientError
 
 # global variables
 env = os.getenv('ENV', 'development')
-# Initialize an empty report list
+
+# Initialize an empty report list - used for version match check
 report = []
 version_status = True
 
@@ -139,11 +139,9 @@ activity_logger.info("Logging initialized.")
 
 def execute_script_on_database(task=None, script_input=None, db_name=None,is_postgres=False, schema_name=None):
     try:
-        print("wll run " + script_input)
         # Handle file or direct SQL input
         if os.path.isfile(script_input):
             with open(script_input, 'r') as script_file:
-                # script = script_file.read()
                 script = script_file.read()
         else:
             script = script_input
@@ -168,10 +166,6 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
             conn = pyodbc.connect(conn_str)
 
         cursor = conn.cursor()
-        if not is_postgres:
-            print("connection string is ")
-            print(conn_str)
-            print(script)
 
         # Execute the script
         cursor.execute(script)
@@ -200,25 +194,19 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
                     "Partition_Alignment_General",
                     "CDD_APP_Align_database_sequences",
                     "CDD_APP_Align_database_sequences",
-                    "PostgreSQL_compare_data",
-                    "MSSQL_compare_LIN_CDD_CDD_PRF_result"
+                    "PostgreSQL_compare_data"
             ):
-                print("Task Name is: " + task)
                 result_file = f"{task}_{db_name}_result.sql"
             else:
-                print("Task not in list")
-                print(task)
                 result_file = f"{schema_name if is_postgres else db_name}_script_results_{timestamp}.txt"
+
             with open(result_file, 'w') as f:
                 for row in results:
-                    print(row[0])
                     f.write(str(row[0]) + '\n')
             activity_logger.info(f"Results saved to: {result_file}")
             return result_file
         else:
             return None
-
-
 
     except Exception as e:
         activity_logger.error(
@@ -241,7 +229,6 @@ def data_compare(db_name, schema_name):
 
         # Read the SQL template for disabling triggers
         sql_file_path = os.path.join(os.path.dirname(__file__), 'PostgreSQL_compare_data.sql')
-
         try:
             with open(sql_file_path, 'r') as file:
                 sql_template = file.read()
