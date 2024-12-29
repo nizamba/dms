@@ -58,31 +58,32 @@ databases_to_migrate = {
         "sourceendpointarn": None,
         "TargetEndpointArn": None,
         "product": "cdd_app"
-    },
-    "LIN_CDD_CDD_PRF": {
-        "source_db": "LIN_CDD_CDD_PRF",
-        "target_schema": "fuga01_cdd_prf",
-        "dms_instance_arn": "None",
-        "sourceendpointarn": None,
-        "TargetEndpointArn": None,
-        "product": "cdd_prf"
-    },
-    # "UDM": {
-    #     "source_db": "UDM",
-    #     "target_schema": "fuga01_udm_cds",
+    }
+    # ,
+    # "LIN_CDD_CDD_PRF": {
+    #     "source_db": "LIN_CDD_CDD_PRF",
+    #     "target_schema": "fuga01_cdd_prf",
     #     "dms_instance_arn": "None",
     #     "sourceendpointarn": None,
     #     "TargetEndpointArn": None,
-    #     "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
+    #     "product": "cdd_prf"
     # },
-    "LIN_CDD_RCM": {
-        "source_db": "LIN_CDD_RCM",
-        "target_schema": "fuga01_rcm",
-        "dms_instance_arn": "None",
-        "sourceendpointarn": None,
-        "TargetEndpointArn": None,
-        "product": "rcm"
-    }
+    # # "UDM": {
+    # #     "source_db": "UDM",
+    # #     "target_schema": "fuga01_udm_cds",
+    # #     "dms_instance_arn": "None",
+    # #     "sourceendpointarn": None,
+    # #     "TargetEndpointArn": None,
+    # #     "product": "udm" # udm,rcm,cdd_app, cdd_prf,sam_app,sam_prf, md
+    # # },
+    # "LIN_CDD_RCM": {
+    #     "source_db": "LIN_CDD_RCM",
+    #     "target_schema": "fuga01_rcm",
+    #     "dms_instance_arn": "None",
+    #     "sourceendpointarn": None,
+    #     "TargetEndpointArn": None,
+    #     "product": "rcm"
+    # }
     # Add more databases as needed
 }
 
@@ -139,6 +140,7 @@ activity_logger.info("Logging initialized.")
 
 def execute_script_on_database(task=None, script_input=None, db_name=None,is_postgres=False, schema_name=None):
     try:
+        print("wll run " + script_input)
         # Handle file or direct SQL input
         if os.path.isfile(script_input):
             with open(script_input, 'r') as script_file:
@@ -159,7 +161,6 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
                 password=rds_postgres_connection["password"]
             )
         else:
-            print(mssql_connection['host'] + db_name + mssql_connection['user'] + mssql_connection['password'])
             conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};" \
                        f"SERVER={mssql_connection['host']};" \
                        f"DATABASE={db_name};" \
@@ -196,11 +197,14 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
                     "Partition_Alignment_General",
                     "CDD_APP_Align_database_sequences",
                     "CDD_APP_Align_database_sequences",
-                    "PostgreSQL_compare_data"
+                    "PostgreSQL_compare_data",
+                    "MSSQL_compare_LIN_CDD_CDD_PRF_result"
             ):
                 print("Task Name is: " + task)
                 result_file = f"{task}_{db_name}_result.sql"
             else:
+                print("Task not in list")
+                print(task)
                 result_file = f"{schema_name if is_postgres else db_name}_script_results_{timestamp}.txt"
             with open(result_file, 'w') as f:
                 for row in results:
@@ -220,7 +224,7 @@ def execute_script_on_database(task=None, script_input=None, db_name=None,is_pos
 def data_compare(db_name, schema_name):
     try:
         # schema_name = db_name.lower()
-        activity_logger.info(f"Align database sequence for schema {schema_name}...")
+        activity_logger.info(f"Data Compare...")
 
         # Verify if the schema exists before proceeding
         check_schema_script = f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
@@ -248,11 +252,12 @@ def data_compare(db_name, schema_name):
         # Execute the script on the target PostgreSQL database
         task_name = os.path.basename(sql_file_path)  # Get 'drop_foreign_keys_in_pg.sql'
         name_without_extension = os.path.splitext(task_name)[0]  # Remove '.sql'
-        execute_script_on_database(name_without_extension,sql_script,db_name, is_postgres=True, schema_name=schema_name)
+        execute_script_on_database(task=name_without_extension,script_input=sql_script,db_name=db_name, is_postgres=True, schema_name=schema_name)
         source_pg_file =  f"{name_without_extension}_{db_name}_result.sql" # PostgreSQL script output file
         target_sql_file = f"MSSQL_data_compare_based_of_PostgreSQL.sql" # Target SQL file for MSSQL
-        sql_name_without_extension = os.path.splitext(target_sql_file)[0]
+        # sql_name_without_extension = os.path.splitext(target_sql_file)[0]
         output_sql_file = f"MSSQL_compare_{db_name}_result.sql"
+        sql_name_without_extension = os.path.splitext(output_sql_file)[0]
 
         #Read the PostgreSQL output file content
         with open(source_pg_file, 'r') as pg_data:
@@ -271,14 +276,31 @@ def data_compare(db_name, schema_name):
 
         print("Replacement completed!")
 
+
+
+        script_2 = os.path.join(os.path.dirname(__file__),f"MSSQL_compare_{db_name}_result.sql")
+        script_3 = script_2.replace('db_name', db_name)
+        print(script_3)
+        try:
+            with open(script_3, 'r') as file:
+                sql_template_1 = file.read()
+        except FileNotFoundError:
+            activity_logger.error(f"SQL file not found: {script_2}")
+            return
+
+
+        if os.path.exists(script_2):
+            print("Script 2 Task is " + sql_name_without_extension)
+            execute_script_on_database(task=sql_name_without_extension,script_input=sql_template_1,db_name= db_name,is_postgres=False, schema_name=schema_name)
+            print(f"Finish run {script_2}")
         # script_2 = output_sql_file
         # if os.path.exists(script_2):
         # # #     execute_script_on_database(sql_name_without_extension,script_2, db_name,is_postgres=True, schema_name=schema_name)
         #     print(f"will run {script_2}")
 
-        activity_logger.info(f"align sequence for schema {schema_name}")
+        activity_logger.info(f"Data Compare")
     except Exception as e:
-        activity_logger.error(f"Error in align sequence for schema {schema_name}: {str(e)}")
+        activity_logger.error(f"Data Compare: {str(e)}")
 def align_db_sequence(db_name, schema_name):
     try:
         # schema_name = db_name.lower()
