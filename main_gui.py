@@ -330,7 +330,7 @@ def run_analyze_script(db_name, is_postgres=False, schema_name=None):
     analyze_template_path = os.path.join(os.path.dirname(__file__), 'mssql_analyze.sql')
     activity_logger.info(f"Running 'Analyze' action for database: {db_name}")
     try:
-        result_file = execute_script_on_database(analyze_template_path, db_name, is_postgres, schema_name)  # True for source database
+        result_file = execute_script_on_database(script_input=analyze_template_path, db_name=db_name, is_postgres=is_postgres, schema_name=schema_name)  # True for source database
         if result_file:
             activity_logger.info(f"Analyze script executed successfully on {db_name}. Results saved to: {result_file}")
         else:
@@ -1527,7 +1527,7 @@ def generate_dms_settings_files(db_name, script_input, func_category):
 if __name__ == "__main__":
     current_dir = os.getcwd()
 
-    # Loop over all Tables and verify source and destination app version match
+    # # Loop over all Tables and verify source and destination app version match
     # for db_name, details in databases_to_migrate.items():
     #     if details["product"] == "udm":
     #         sql_schema = details["source_db"] + '_CDS'
@@ -1556,7 +1556,7 @@ if __name__ == "__main__":
     #     sys.exit("Stopping the application due to mismatched versions.")
     # else:
     #     print("versions matched will continue migration process")
-    #
+
     # if dms_create:
     #     create_dms_replication_instance(dms_details["instance_identifier"], dms_details["instance_class"],dms_details["allocated_storage"], dms_details["subnet_group_name"], dms_details["VpcSecurityGroupIds"], dms_details["region"],dms_details["public_access"], db_name=None)
     #     # configure_dms_endpoints('source', 'sqlserver', mssql_connection["host"], 1433, mssql_connection["database"], mssql_connection["user"], mssql_connection["password"], dms_details["region"])
@@ -1567,15 +1567,15 @@ if __name__ == "__main__":
         # Generate a timestamp
         # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    #     details["sourceendpointarn"] = configure_dms_endpoints('source', 'sqlserver', mssql_connection["host"], 1433, details["source_db"], mssql_connection["user"], mssql_connection["password"], dms_details["region"])
-    #     print("source endpoint for DB " + db_name + " Is " + details["sourceendpointarn"])
-    #
-    #
+        # details["sourceendpointarn"] = configure_dms_endpoints('source', 'sqlserver', mssql_connection["host"], 1433, details["source_db"], mssql_connection["user"], mssql_connection["password"], dms_details["region"])
+        # print("source endpoint for DB " + db_name + " Is " + details["sourceendpointarn"])
+
+
     #     ##### run_analyze_script
     #     run_analyze_script(details["source_db"])
     #
     #     ##### create partition alignment
-    #     create_partition_alignment(details["source_db"], False,details["target_schema"])
+    #     create_partition_alignment(details["source_db"],schema_name=details["target_schema"],is_postgres=False)
     #
     #     ##### disable triggers
     #     disable_triggers_in_pg(db_name, details["target_schema"])
@@ -1583,15 +1583,13 @@ if __name__ == "__main__":
     #     ##### drop fks
     #     drop_fks_in_pg(db_name, details["target_schema"])
     #     disable_triggers_in_pg(db_name, details["target_schema"])
-    #     enable_triggers(db_name, details["target_schema"])
-    #     recreate_fks(db_name, details["target_schema"])
-    #     print("db_name is: " + db_name)
-    #     print("target schema is: " + details["target_schema"])
+    #     # enable_triggers(db_name, details["target_schema"])
+    #     # recreate_fks(db_name, details["target_schema"])
     #     create_partition_alignment(db_name, details["target_schema"], is_postgres=False)
-    #     change_partition_owner(db_name, details["target_schema"])
-    #     update_statistics(db_name, details["target_schema"])
-        align_db_sequence(db_name, details["target_schema"])
-        # data_compare(db_name, details["target_schema"])
+    #     # change_partition_owner(db_name, details["target_schema"])
+    #     # update_statistics(db_name, details["target_schema"])
+    #     # align_db_sequence(db_name, details["target_schema"])
+        data_compare(db_name, details["target_schema"])
     #
     #     #####
     #     change_partition_owner(db_name, details["target_schema"])

@@ -11,8 +11,7 @@ CREATE TABLE #TempTable (
 );
 
 -- Step 2: Insert the new values into the temporary table
-?????
-
+'PostgreSQL_compare_data'
 
 -- Step 3: Do a comparison for the following table's row amount in the SQL server
 SELECT DISTINCT
